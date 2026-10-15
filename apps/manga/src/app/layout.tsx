@@ -28,7 +28,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="fr" className="dark">
       <body className={`${jakarta.variable} font-sans antialiased min-h-screen bg-background text-foreground`}>
         {/* Une seule destination (la collection) : pas de barre d'onglets. */}
-        <AppShell appName="Manga" icon={<BookOpen className="w-5 h-5 text-violet-400" aria-hidden="true" />}>
+        <AppShell appName="Manga" current="manga" icon={<BookOpen className="w-5 h-5 text-violet-400" aria-hidden="true" />}>
           {children}
         </AppShell>
       </body>

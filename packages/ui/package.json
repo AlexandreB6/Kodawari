@@ -7,7 +7,9 @@
     "./AppShell": "./src/AppShell.tsx",
     "./BottomNav": "./src/BottomNav.tsx",
     "./ConfirmDialog": "./src/ConfirmDialog.tsx",
+    "./AppSwitcher": "./src/AppSwitcher.tsx",
     "./DemoBanner": "./src/DemoBanner.tsx",
+    "./InstallPrompt": "./src/InstallPrompt.tsx",
     "./LoginForm": "./src/LoginForm.tsx",
     "./PwaRegister": "./src/PwaRegister.tsx"
   },

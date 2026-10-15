@@ -35,6 +35,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body className={`${jakarta.variable} font-sans antialiased min-h-screen bg-background text-foreground`}>
         <AppShell
           appName="Cinéma"
+          current="film"
           icon={<Film className="w-5 h-5 text-blue-400" aria-hidden="true" />}
           navItems={NAV_ITEMS}
         >

@@ -6,10 +6,14 @@ import { isOwnerGateEnabled, isOwnerAuthenticated } from "@repo/core/owner";
 import { DemoBanner } from "./DemoBanner";
 import { BottomNav, type NavItem } from "./BottomNav";
 import { PwaRegister } from "./PwaRegister";
+import { AppSwitcher, type AppId } from "./AppSwitcher";
+import { InstallPrompt } from "./InstallPrompt";
 
 export interface AppShellProps {
   /** Nom affiché dans le header (ex: "Cinéma"). */
   appName: string;
+  /** App courante, surlignée dans le sélecteur d'apps. */
+  current: AppId;
   /** Icône du header, déjà rendue (les composants ne traversent pas la frontière RSC). */
   icon: ReactNode;
   /** Onglets de la barre mobile. Ignorée s'il y a moins de 2 entrées. */
@@ -24,7 +28,7 @@ const IS_DEMO = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
  * principal, barre d'onglets mobile, toasts et enregistrement du service
  * worker. Extraite de l'ancien layout.tsx monolithique.
  */
-export async function AppShell({ appName, icon, navItems, children }: AppShellProps) {
+export async function AppShell({ appName, current, icon, navItems, children }: AppShellProps) {
   const showOwnerButton = isOwnerGateEnabled();
   const isOwner = showOwnerButton && (await isOwnerAuthenticated());
   const showBottomNav = (navItems?.length ?? 0) >= 2;
@@ -64,9 +68,11 @@ export async function AppShell({ appName, icon, navItems, children }: AppShellPr
             </nav>
           )}
 
-          {showOwnerButton && (
-            <div className="ml-auto">
-              {isOwner ? (
+          <div className="ml-auto flex items-center gap-2">
+            <AppSwitcher current={current} />
+
+            {showOwnerButton &&
+              (isOwner ? (
                 <form action="/api/auth/logout" method="post">
                   <button
                     type="submit"
@@ -86,13 +92,13 @@ export async function AppShell({ appName, icon, navItems, children }: AppShellPr
                   <LogIn className="w-3.5 h-3.5" aria-hidden="true" />
                   <span className="hidden sm:inline">Connexion</span>
                 </Link>
-              )}
-            </div>
-          )}
+              ))}
+          </div>
         </div>
       </header>
 
-      {/* Sous le header : au-dessus, il serait recouvert par l'encoche */}
+      {/* Sous le header : au-dessus, ils seraient recouverts par l'encoche */}
+      <InstallPrompt appName={appName} />
       {IS_DEMO && <DemoBanner />}
 
       {/* Padding bas sur mobile : laisse la place à la BottomNav fixée */}

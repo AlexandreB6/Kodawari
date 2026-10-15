@@ -6,6 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Manga — Kodawari",
     short_name: "Manga",
     description: "Ma collection de mangas et le suivi des volumes possédés",
+    id: "/",
     start_url: "/",
     scope: "/",
     display: "standalone",
