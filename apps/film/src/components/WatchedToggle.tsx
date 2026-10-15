@@ -19,7 +19,6 @@ interface WatchedToggleProps {
   initialRating: number | null;
   initialWatchedAt: string | null;
   initialWatchedPrecision: string;
-  isShared?: boolean;
 }
 
 /**
@@ -30,7 +29,6 @@ export function WatchedToggle({
   tmdbId, title, posterPath, overview, director, releaseYear, releaseDate,
   initialWatched, initialRating, initialWatchedAt,
   // initialWatchedPrecision n'est pas utilisé — la précision est toujours "year" dans le dialog
-  isShared = false,
 }: WatchedToggleProps) {
   const [watched, setWatched] = useState(initialWatched);
   const [userRating, setUserRating] = useState<number | null>(initialRating);
@@ -118,37 +116,28 @@ export function WatchedToggle({
               </span>
             )}
           </div>
-          {isShared ? (
-            <span
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 text-amber-300 text-sm font-medium border border-amber-500/20"
-              title="Ce film fait partie du catalogue de démonstration, partagé avec tous les visiteurs."
+          <>
+            <button
+              onClick={() => {
+                setDialogRating(userRating);
+                setDialogYear(userWatchedAt ? new Date(userWatchedAt).getFullYear() : "");
+                setShowDialog(true);
+              }}
+              disabled={saving}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors border border-white/10 cursor-pointer disabled:opacity-50"
             >
-              Catalogue partagé — non modifiable
-            </span>
-          ) : (
-            <>
-              <button
-                onClick={() => {
-                  setDialogRating(userRating);
-                  setDialogYear(userWatchedAt ? new Date(userWatchedAt).getFullYear() : "");
-                  setShowDialog(true);
-                }}
-                disabled={saving}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors border border-white/10 cursor-pointer disabled:opacity-50"
-              >
-                <Pencil className="w-4 h-4" aria-hidden="true" />
-                Modifier
-              </button>
-              <button
-                onClick={handleRemove}
-                disabled={saving}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-500/10 text-red-400 hover:bg-red-500/20 text-sm font-medium transition-colors border border-red-500/20 cursor-pointer disabled:opacity-50"
-              >
-                <EyeOff className="w-4 h-4" aria-hidden="true" />
-                Retirer
-              </button>
-            </>
-          )}
+              <Pencil className="w-4 h-4" aria-hidden="true" />
+              Modifier
+            </button>
+            <button
+              onClick={handleRemove}
+              disabled={saving}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-500/10 text-red-400 hover:bg-red-500/20 text-sm font-medium transition-colors border border-red-500/20 cursor-pointer disabled:opacity-50"
+            >
+              <EyeOff className="w-4 h-4" aria-hidden="true" />
+              Retirer
+            </button>
+          </>
         </div>
       ) : (
         <button

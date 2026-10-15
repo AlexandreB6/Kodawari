@@ -1,0 +1,104 @@
+// Schéma Prisma des comptes, partagé par les 3 apps.
+// Base dédiée (`auth`) dans le projet Neon : la seule donnée commune aux apps.
+// Tables Better Auth (user, session, account, verification, rateLimit) +
+// UserMerge pour rattacher les données d'un invité à son compte.
+
+generator client {
+  provider = "prisma-client-js"
+  // Sortie dédiée : comme pour les apps, le client par défaut serait hoisté
+  // à la racine et écrasé par celui d'une app.
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("AUTH_DATABASE_URL")
+  directUrl = env("AUTH_DIRECT_URL")
+}
+
+model User {
+  id            String    @id
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  /// Invité (plugin anonymous) : créé au premier ajout, sans identifiants
+  isAnonymous   Boolean?  @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+
+  @@index([isAnonymous, createdAt])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+model RateLimit {
+  id          String @id
+  key         String @unique
+  count       Int
+  lastRequest BigInt
+
+  @@map("rateLimit")
+}
+
+/// Un invité est devenu `newId` (inscription ou connexion). Chaque app, qui ne
+/// voit que sa propre base, y transfère ses lignes au prochain passage de
+/// l'utilisateur puis s'ajoute à `mergedApps`.
+model UserMerge {
+  id         Int      @id @default(autoincrement())
+  anonId     String
+  newId      String
+  mergedApps String[] @default([])
+  createdAt  DateTime @default(now())
+
+  @@unique([anonId, newId])
+  @@index([newId])
+}

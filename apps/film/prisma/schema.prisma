@@ -28,10 +28,10 @@ model Movie {
   rating           Float?    /// Note personnelle (0.5–5, par pas de 0.5)
   owned            Boolean   @default(false) /// Possède un exemplaire physique
   ownedFormat      String?   /// Format possédé (DVD, Blu-ray, etc.)
-  demoSessionId    String?   /// Sandbox démo : NULL = seed partagé / prod privée
+  userId           String?   /// Propriétaire (compte ou invité, base auth). Rendu obligatoire après rattachement des données existantes
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
-  @@unique([tmdbId, demoSessionId])
-  @@index([demoSessionId])
+  @@unique([tmdbId, userId])
+  @@index([userId])
 }

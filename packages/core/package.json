@@ -4,11 +4,6 @@
   "private": true,
   "exports": {
     "./apiFetch": "./src/apiFetch.ts",
-    "./authRoutes": "./src/authRoutes.ts",
-    "./clientDemo": "./src/clientDemo.ts",
-    "./demo": "./src/demo.ts",
-    "./owner": "./src/owner.ts",
-    "./proxy": "./src/proxy.ts",
     "./utils": "./src/utils.ts"
   },
   "dependencies": {

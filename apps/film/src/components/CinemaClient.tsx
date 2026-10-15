@@ -12,7 +12,6 @@ import { slugify } from "@/lib/tmdb";
 import type { TmdbGenre } from "@/lib/tmdb";
 import { CURRENT_YEAR, buildYearOptions } from "@repo/core/utils";
 import { apiFetch } from "@repo/core/apiFetch";
-import { isSharedItem } from "@repo/core/clientDemo";
 
 interface WatchedMovie {
   tmdbId: number;
@@ -24,7 +23,6 @@ interface WatchedMovie {
   watchedAt: string | null;
   watchedPrecision: string;
   overview: string | null;
-  demoSessionId: string | null;
 }
 
 interface CinemaClientProps {
@@ -123,7 +121,6 @@ export function CinemaClient({
             watchedAt: m.watchedAt as string | null,
             watchedPrecision: (m.watchedPrecision as string) ?? "day",
             overview: m.overview as string | null,
-            demoSessionId: (m.demoSessionId as string | null) ?? null,
           }));
         setWatchedMovies(mapped);
         setWatchedIds(new Set(mapped.map((m) => m.tmdbId)));
@@ -266,7 +263,6 @@ export function CinemaClient({
           watchedAt: saved.watchedAt,
           watchedPrecision: saved.watchedPrecision,
           overview: saved.overview,
-          demoSessionId: saved.demoSessionId ?? null,
         },
         ...prev.filter((m) => m.tmdbId !== tmdbId),
       ]);
@@ -626,30 +622,21 @@ export function CinemaClient({
                       </p>
                     )}
                     <div className="flex items-center gap-3 mt-1">
-                      {isSharedItem(movie) ? (
-                        <span
-                          className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20"
-                          title="Ce film fait partie du catalogue de démonstration — il est partagé avec tous les visiteurs et ne peut pas être modifié."
+                      <>
+                        <button
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditMovie(movie); }}
+                          className="text-xs text-muted-foreground hover:text-white transition-colors cursor-pointer inline-flex items-center gap-1"
                         >
-                          Catalogue partagé
-                        </span>
-                      ) : (
-                        <>
-                          <button
-                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditMovie(movie); }}
-                            className="text-xs text-muted-foreground hover:text-white transition-colors cursor-pointer inline-flex items-center gap-1"
-                          >
-                            <Pencil className="w-3 h-3" aria-hidden="true" />
-                            Modifier
-                          </button>
-                          <button
-                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMovieToRemove(movie); }}
-                            className="text-xs text-red-400/70 hover:text-red-400 transition-colors cursor-pointer"
-                          >
-                            Retirer
-                          </button>
-                        </>
-                      )}
+                          <Pencil className="w-3 h-3" aria-hidden="true" />
+                          Modifier
+                        </button>
+                        <button
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMovieToRemove(movie); }}
+                          className="text-xs text-red-400/70 hover:text-red-400 transition-colors cursor-pointer"
+                        >
+                          Retirer
+                        </button>
+                      </>
                     </div>
                   </div>
                 </Link>

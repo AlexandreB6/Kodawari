@@ -1,38 +1,28 @@
 /**
  * Route API : /api/manga
- * CRUD pour la collection de mangas.
- * Demo mode: writes are scoped per visitor via demoSessionId cookie.
+ * CRUD pour la collection de mangas, scopé à l'utilisateur courant (compte
+ * ou invité). Sans session, les mutations répondent 401 NO_SESSION.
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import {
-  assertDemoOwnership,
-  demoFilter,
-  demoWriteData,
-  DemoForbiddenError,
-} from "@repo/core/demo";
-import { ownerGateResponse } from "@repo/core/owner";
+import { noSessionResponse } from "@repo/auth/scope";
+import { currentUserId, ownerFilter } from "@/lib/scope";
 
-/** Message renvoyé quand le visiteur tente de modifier une ligne du catalogue de démo. */
-const SHARED_MANGA_MESSAGE =
-  "Ce manga fait partie du catalogue partagé et ne peut pas être modifié.";
-
-/** Liste tous les mangas visibles pour la session courante. */
+/** Liste les mangas de l'utilisateur courant. */
 export async function GET() {
-  const filter = await demoFilter();
   const mangas = await prisma.manga.findMany({
-    where: filter,
+    where: await ownerFilter(),
     orderBy: { title: "asc" },
   });
   return NextResponse.json(mangas);
 }
 
-/** Ajoute un manga à la collection (upsert scoped par demoSessionId). */
+/** Ajoute un manga à la collection (upsert sur malId pour l'utilisateur courant). */
 export async function POST(req: NextRequest) {
-  const gate = await ownerGateResponse();
-  if (gate) return gate;
+  const userId = await currentUserId();
+  if (!userId) return noSessionResponse();
   const body = await req.json();
   const { malId, title, titleJapanese, coverImage, author, volumes, chapters, synopsis, genres, demographic, score, status } = body;
 
@@ -40,14 +30,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "malId and title required" }, { status: 400 });
   }
 
-  const { demoSessionId } = await demoWriteData();
-  const existing = await prisma.manga.findFirst({ where: { malId, demoSessionId } });
+  const existing = await prisma.manga.findFirst({ where: { malId, userId } });
 
   const payload = { malId, title, titleJapanese, coverImage, author, volumes, chapters, synopsis, genres, demographic, score, status };
 
   const manga = existing
     ? await prisma.manga.update({ where: { id: existing.id }, data: payload })
-    : await prisma.manga.create({ data: { ...payload, demoSessionId } });
+    : await prisma.manga.create({ data: { ...payload, userId } });
 
   revalidatePath("/");
   return NextResponse.json(manga);
@@ -55,26 +44,16 @@ export async function POST(req: NextRequest) {
 
 /** Met à jour ownedVolumesMap et/ou notes d'un manga. */
 export async function PUT(req: NextRequest) {
-  const gate = await ownerGateResponse();
-  if (gate) return gate;
+  const userId = await currentUserId();
+  if (!userId) return noSessionResponse();
   const { malId, ownedVolumesMap, notes } = await req.json();
   if (!malId) {
     return NextResponse.json({ error: "malId required" }, { status: 400 });
   }
 
-  const filter = await demoFilter();
-  const existing = await prisma.manga.findFirst({ where: { malId, ...filter } });
+  const existing = await prisma.manga.findFirst({ where: { malId, userId } });
   if (!existing) {
     return NextResponse.json({ error: "Manga not found" }, { status: 404 });
-  }
-
-  try {
-    await assertDemoOwnership(existing.demoSessionId, SHARED_MANGA_MESSAGE);
-  } catch (e) {
-    if (e instanceof DemoForbiddenError) {
-      return NextResponse.json({ error: e.message }, { status: 403 });
-    }
-    throw e;
   }
 
   const data: Record<string, unknown> = {};
@@ -88,26 +67,16 @@ export async function PUT(req: NextRequest) {
 
 /** Supprime un manga de la collection. */
 export async function DELETE(req: NextRequest) {
-  const gate = await ownerGateResponse();
-  if (gate) return gate;
+  const userId = await currentUserId();
+  if (!userId) return noSessionResponse();
   const { malId } = await req.json();
   if (!malId) {
     return NextResponse.json({ error: "malId required" }, { status: 400 });
   }
 
-  const filter = await demoFilter();
-  const existing = await prisma.manga.findFirst({ where: { malId, ...filter } });
+  const existing = await prisma.manga.findFirst({ where: { malId, userId } });
   if (!existing) {
     return NextResponse.json({ error: "Manga not found" }, { status: 404 });
-  }
-
-  try {
-    await assertDemoOwnership(existing.demoSessionId, SHARED_MANGA_MESSAGE);
-  } catch (e) {
-    if (e instanceof DemoForbiddenError) {
-      return NextResponse.json({ error: e.message }, { status: 403 });
-    }
-    throw e;
   }
 
   await prisma.manga.delete({ where: { id: existing.id } });

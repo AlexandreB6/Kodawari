@@ -23,10 +23,10 @@ model OwnedPaint {
   range         String   @default("citadel") /// Gamme de peinture ("citadel", "monument-hobbies")
   quantity      Int      @default(1)
   notes         String?
-  demoSessionId String?  /// Sandbox démo : NULL = seed partagé / prod privée
+  userId        String?  /// Propriétaire (compte ou invité, base auth). Rendu obligatoire après rattachement des données existantes
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  @@unique([paintId, range, demoSessionId])
-  @@index([demoSessionId])
+  @@unique([paintId, range, userId])
+  @@index([userId])
 }

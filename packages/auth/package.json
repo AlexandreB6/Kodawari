@@ -1,0 +1,27 @@
+{
+  "name": "@repo/auth",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "generate": "prisma generate",
+    "postinstall": "prisma generate"
+  },
+  "exports": {
+    "./client": "./src/client.ts",
+    "./guests": "./src/guests.ts",
+    "./handler": "./src/handler.ts",
+    "./scope": "./src/scope.ts",
+    "./server": "./src/server.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "better-auth": "^1.7.9"
+  },
+  "devDependencies": {
+    "@repo/tsconfig": "*",
+    "prisma": "^5.22.0"
+  },
+  "peerDependencies": {
+    "next": "^16.2.3"
+  }
+}

@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { demoFilter } from "@repo/core/demo";
+import { ownerFilter } from "@/lib/scope";
 import { extractMalIdFromSlug, getMangaById, getAuthor, formatGenres } from "@/lib/jikan";
 import { MangaDetailClient } from "@/components/MangaDetailClient";
 import type { MangaItem } from "@/components/MangaCard";
@@ -13,11 +13,8 @@ interface Props {
 
 /** Charge le manga depuis la DB, ou depuis Jikan si absent de la collection. */
 async function loadManga(malId: number): Promise<{ manga: MangaItem; isInCollection: boolean }> {
-  const filter = await demoFilter();
-  // Prefer the visitor's own row over the seed row for the same malId.
   const dbManga = await prisma.manga.findFirst({
-    where: { AND: [{ malId }, filter] },
-    orderBy: { demoSessionId: { sort: "desc", nulls: "last" } },
+    where: { malId, ...(await ownerFilter()) },
   });
 
   if (dbManga) {
@@ -53,7 +50,6 @@ async function loadManga(malId: number): Promise<{ manga: MangaItem; isInCollect
       notes: null,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      demoSessionId: null,
     },
     isInCollection: false,
   };

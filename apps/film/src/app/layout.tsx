@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { Film, Compass } from "lucide-react";
 import { AppShell } from "@repo/ui/AppShell";
+import { currentAccount } from "@/lib/scope";
 import type { NavItem } from "@repo/ui/BottomNav";
 
 /** Police principale — Plus Jakarta Sans via Google Fonts */
@@ -29,13 +30,15 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/?tab=collection", label: "Ma collection", icon: <Film className="h-5 w-5 md:h-3.5 md:w-3.5" aria-hidden="true" /> },
 ];
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const user = await currentAccount();
   return (
     <html lang="fr" className="dark">
       <body className={`${jakarta.variable} font-sans antialiased min-h-screen bg-background text-foreground`}>
         <AppShell
           appName="Cinéma"
           current="film"
+          user={user}
           icon={<Film className="w-5 h-5 text-blue-400" aria-hidden="true" />}
           navItems={NAV_ITEMS}
         >
