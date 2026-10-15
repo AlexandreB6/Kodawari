@@ -1,38 +1,28 @@
 /**
  * Route API : /api/movies
- * CRUD pour la collection de films vus.
- * Demo mode: writes are scoped per visitor via demoSessionId cookie.
+ * CRUD pour la collection de films vus, scopé à l'utilisateur courant
+ * (compte ou invité). Sans session, les mutations répondent 401 NO_SESSION.
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import {
-  assertDemoOwnership,
-  demoFilter,
-  demoWriteData,
-  DemoForbiddenError,
-} from "@repo/core/demo";
-import { ownerGateResponse } from "@repo/core/owner";
+import { noSessionResponse } from "@repo/auth/scope";
+import { currentUserId, ownerFilter } from "@/lib/scope";
 
-/** Message renvoyé quand le visiteur tente de modifier une ligne du catalogue de démo. */
-const SHARED_MOVIE_MESSAGE =
-  "Ce film fait partie du catalogue partagé et ne peut pas être modifié.";
-
-/** Liste tous les films visibles pour la session courante (seed + sandbox). */
+/** Liste les films vus de l'utilisateur courant. */
 export async function GET() {
-  const filter = await demoFilter();
   const movies = await prisma.movie.findMany({
-    where: filter,
+    where: await ownerFilter(),
     orderBy: { createdAt: "desc" },
   });
   return NextResponse.json(movies);
 }
 
-/** Ajoute un film vu (upsert scoped par demoSessionId). */
+/** Ajoute un film vu (upsert sur tmdbId pour l'utilisateur courant). */
 export async function POST(req: NextRequest) {
-  const gate = await ownerGateResponse();
-  if (gate) return gate;
+  const userId = await currentUserId();
+  if (!userId) return noSessionResponse();
   const body = await req.json();
   const { tmdbId, title, posterPath, overview, director, releaseYear, rating, watchedAt, watchedPrecision } = body;
 
@@ -41,9 +31,7 @@ export async function POST(req: NextRequest) {
   }
 
   const precision = watchedPrecision === "year" ? "year" : "day";
-  const { demoSessionId } = await demoWriteData();
-
-  const existing = await prisma.movie.findFirst({ where: { tmdbId, demoSessionId } });
+  const existing = await prisma.movie.findFirst({ where: { tmdbId, userId } });
 
   const data = {
     tmdbId,
@@ -55,7 +43,7 @@ export async function POST(req: NextRequest) {
     rating: rating != null ? Number(rating) : null,
     watchedAt: watchedAt ? new Date(watchedAt) : null,
     watchedPrecision: precision,
-    demoSessionId,
+    userId,
   };
 
   const movie = existing
@@ -70,14 +58,13 @@ export async function POST(req: NextRequest) {
     : await prisma.movie.create({ data });
 
   revalidatePath("/");
-  revalidatePath("/");
   return NextResponse.json(movie);
 }
 
 /** Met à jour un film (rating, owned, watchedAt). */
 export async function PUT(req: NextRequest) {
-  const gate = await ownerGateResponse();
-  if (gate) return gate;
+  const userId = await currentUserId();
+  if (!userId) return noSessionResponse();
   const body = await req.json();
   const { tmdbId, rating, owned, ownedFormat, watchedAt, watchedPrecision } = body;
 
@@ -85,19 +72,9 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: "tmdbId required" }, { status: 400 });
   }
 
-  const filter = await demoFilter();
-  const existing = await prisma.movie.findFirst({ where: { tmdbId, ...filter } });
+  const existing = await prisma.movie.findFirst({ where: { tmdbId, userId } });
   if (!existing) {
     return NextResponse.json({ error: "Movie not found" }, { status: 404 });
-  }
-
-  try {
-    await assertDemoOwnership(existing.demoSessionId, SHARED_MOVIE_MESSAGE);
-  } catch (e) {
-    if (e instanceof DemoForbiddenError) {
-      return NextResponse.json({ error: e.message }, { status: 403 });
-    }
-    throw e;
   }
 
   const data: Record<string, unknown> = {};
@@ -114,30 +91,19 @@ export async function PUT(req: NextRequest) {
 
 /** Supprime un film de la collection. */
 export async function DELETE(req: NextRequest) {
-  const gate = await ownerGateResponse();
-  if (gate) return gate;
+  const userId = await currentUserId();
+  if (!userId) return noSessionResponse();
   const { tmdbId } = await req.json();
   if (!tmdbId) {
     return NextResponse.json({ error: "tmdbId required" }, { status: 400 });
   }
 
-  const filter = await demoFilter();
-  const existing = await prisma.movie.findFirst({ where: { tmdbId, ...filter } });
+  const existing = await prisma.movie.findFirst({ where: { tmdbId, userId } });
   if (!existing) {
     return NextResponse.json({ error: "Movie not found" }, { status: 404 });
   }
 
-  try {
-    await assertDemoOwnership(existing.demoSessionId, SHARED_MOVIE_MESSAGE);
-  } catch (e) {
-    if (e instanceof DemoForbiddenError) {
-      return NextResponse.json({ error: e.message }, { status: 403 });
-    }
-    throw e;
-  }
-
   await prisma.movie.delete({ where: { id: existing.id } });
-  revalidatePath("/");
   revalidatePath("/");
   return NextResponse.json({ ok: true });
 }

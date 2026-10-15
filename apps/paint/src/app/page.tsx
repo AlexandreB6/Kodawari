@@ -1,24 +1,18 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { PAINT_RANGES } from "@/data/paint-ranges";
-import { demoFilter, dedupBySid } from "@repo/core/demo";
+import { ownerFilter } from "@/lib/scope";
 
 export const dynamic = "force-dynamic";
 
 /** Page hub Peinture — liste les gammes disponibles avec compteurs de possession. */
 export default async function PeinturePage() {
-  const where = await demoFilter();
-  // groupBy can't express "dedupe seed/visitor collisions first", so we fetch
-  // the raw rows and count per range in JS after dedup. Scale is tiny (dozens).
-  const rawRows = await prisma.ownedPaint.findMany({
-    where,
-    select: { paintId: true, range: true, demoSessionId: true },
+  const counts = await prisma.ownedPaint.groupBy({
+    by: ["range"],
+    where: await ownerFilter(),
+    _count: true,
   });
-  const deduped = dedupBySid(rawRows, (p) => `${p.range}:${p.paintId}`);
-  const countMap = new Map<string, number>();
-  for (const p of deduped) {
-    countMap.set(p.range, (countMap.get(p.range) ?? 0) + 1);
-  }
+  const countMap = new Map(counts.map((c) => [c.range, c._count]));
 
   return (
     <div className="space-y-8">

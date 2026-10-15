@@ -9,7 +9,6 @@ interface PaintCardProps {
   paint: Paint;
   quantity: number;
   typeColors: Record<string, string>;
-  isShared?: boolean;
   onAdd: () => void;
   onRemove: () => void;
   onIncrement: () => void;
@@ -35,7 +34,6 @@ export function PaintCard({
   paint,
   quantity,
   typeColors,
-  isShared = false,
   onAdd,
   onRemove,
   onIncrement,
@@ -103,14 +101,7 @@ export function PaintCard({
 
       {/* Actions */}
       <div className="mt-3 flex items-center gap-1">
-        {isShared ? (
-          <span
-            className="w-full text-center rounded-md bg-amber-500/10 border border-amber-500/20 px-2 py-1 text-[10px] font-medium text-amber-300"
-            title="Cette peinture fait partie du catalogue de démonstration et ne peut pas être modifiée."
-          >
-            Catalogue partagé
-          </span>
-        ) : !inStock ? (
+        {!inStock ? (
           <button
             onClick={onAdd}
             aria-label={`Ajouter ${paint.name} à l'inventaire`}

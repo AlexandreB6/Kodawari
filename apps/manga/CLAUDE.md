@@ -9,7 +9,7 @@ Voir le `CLAUDE.md` racine pour les règles communes au monorepo.
 |---|---|
 | `/` | Home — collection, recherche Jikan, ajout manuel ou par scan ISBN |
 | `/manga/[slug]` | Détail d'une série + grille des volumes. Slug `titre-slug-{malId}` — `extractMalIdFromSlug()` de `src/lib/jikan.ts`. |
-| `/login`, `/offline` | Write-gate propriétaire / page hors ligne |
+| `/login`, `/offline` | Connexion / inscription, page hors ligne |
 
 ## API
 
