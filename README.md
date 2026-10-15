@@ -1,13 +1,21 @@
 # Kodawari
 
-Monorepo de trois applications indépendantes pour gérer mes collections personnelles.
-Chacune est une **PWA installable** sur téléphone, déployée séparément.
+> **こだわり** (*kodawari*) : le souci du détail, l'exigence qu'on met dans ce qui
+> nous tient à cœur. C'est l'état d'esprit du passionné qui veut savoir quel film
+> il a vu, quel tome lui manque et quel pot de peinture est presque vide.
 
-| App | Dossier | Contenu | Port dev |
-|---|---|---|---|
-| 🎬 **Cinéma** | [`apps/film`](apps/film) | Films vus, notes 0.5–5 ★, découverte du catalogue TMDB | 3000 |
-| 📚 **Manga** | [`apps/manga`](apps/manga) | Collection MyAnimeList, suivi des volumes, scan ISBN | 3001 |
-| 🎨 **Peinture** | [`apps/paint`](apps/paint) | Inventaire multi-gammes (Citadel, Monument Hobbies) | 3002 |
+Kodawari rassemble mes carnets de passionné : un endroit à moi pour noter, suivre
+et retrouver ce que je collectionne. Chaque passion a son app, pensée pour son
+usage, et de nouvelles pourront s'ajouter au fil des envies.
+
+Monorepo de trois applications indépendantes. Chacune est une **PWA installable**
+sur téléphone, déployée séparément.
+
+| App | Dossier | Contenu | En ligne | Port dev |
+|---|---|---|---|---|
+| 🎬 **Cinéma** | [`apps/film`](apps/film) | Films vus, notes 0.5–5 ★, découverte du catalogue TMDB | [kodawari-film](https://kodawari-film.vercel.app) | 3000 |
+| 📚 **Manga** | [`apps/manga`](apps/manga) | Collection MyAnimeList, suivi des volumes, scan ISBN | [kodawari-manga](https://kodawari-manga.vercel.app) | 3001 |
+| 🎨 **Peinture** | [`apps/paint`](apps/paint) | Inventaire multi-gammes (Citadel, Monument Hobbies) | [kodawari-paint](https://kodawari-paint.vercel.app) | 3002 |
 
 ## Pourquoi trois apps
 
