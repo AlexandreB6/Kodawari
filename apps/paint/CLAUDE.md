@@ -1,4 +1,4 @@
-# apps/peinture
+# apps/paint
 
 App **Peinture** — inventaire de peintures pour figurines.
 Voir le `CLAUDE.md` racine pour les règles communes au monorepo.

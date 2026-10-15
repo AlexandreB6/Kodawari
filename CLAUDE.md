@@ -8,7 +8,7 @@ Trois applications Next.js **indépendantes** (npm workspaces), une par domaine.
 Elles ne partagent aucune donnée : ni base, ni déploiement, ni navigation.
 
 ```
-apps/cinema     apps/manga     apps/peinture
+apps/film       apps/manga     apps/paint
 packages/core   packages/ui    packages/tsconfig
 ```
 
@@ -19,11 +19,11 @@ Chaque app a son `CLAUDE.md` — le lire avant de toucher à son code.
 ```bash
 npm install                    # racine uniquement
 
-npm run dev:cinema             # :3000   (idem :manga :3001, :peinture :3002)
+npm run dev:film               # :3000   (idem :manga :3001, :paint :3002)
 npm run build:all              # build les 3
 npm run typecheck              # tsc --noEmit sur les 3
 
-npm run build -w cinema        # une seule app
+npm run build -w film          # une seule app
 ```
 
 Prisma se pilote **depuis le dossier de l'app** (`cd apps/<app>`) :

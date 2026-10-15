@@ -1,7 +1,7 @@
 /**
  * Fabriques de route handlers pour le write-gate owner.
  *
- * Les trois apps (cinema / manga / peinture) exposent chacune un
+ * Les trois apps (film / manga / paint) exposent chacune un
  * `/api/auth/login` et un `/api/auth/logout` strictement identiques : elles se
  * contentent de réexporter les handlers produits ici.
  *

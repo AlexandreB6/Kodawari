@@ -34,7 +34,7 @@ export function DemoBanner() {
         </div>
         <div className="flex items-center gap-3">
           <a
-            href="https://github.com/AlexandreB6/MyPersonalStuff"
+            href="https://github.com/AlexandreB6/Kodawari"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1 hover:text-amber-100 transition-colors"

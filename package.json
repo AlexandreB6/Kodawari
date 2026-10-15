@@ -1,5 +1,5 @@
 {
-  "name": "mypersonalstuff",
+  "name": "kodawari",
   "version": "0.1.0",
   "private": true,
   "workspaces": [
@@ -7,14 +7,14 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "npm run dev -w cinema",
-    "dev:cinema": "npm run dev -w cinema",
+    "dev": "npm run dev -w film",
+    "dev:film": "npm run dev -w film",
     "dev:manga": "npm run dev -w manga",
-    "dev:peinture": "npm run dev -w peinture",
-    "build:cinema": "npm run build -w cinema",
+    "dev:paint": "npm run dev -w paint",
+    "build:film": "npm run build -w film",
     "build:manga": "npm run build -w manga",
-    "build:peinture": "npm run build -w peinture",
-    "build:all": "npm run build -w cinema && npm run build -w manga && npm run build -w peinture",
+    "build:paint": "npm run build -w paint",
+    "build:all": "npm run build -w film && npm run build -w manga && npm run build -w paint",
     "typecheck": "npm run typecheck --workspaces --if-present"
   },
   "devDependencies": {

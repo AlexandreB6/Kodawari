@@ -1,4 +1,4 @@
-# apps/cinema
+# apps/film
 
 App **Cinéma** — collection de films vus + exploration du catalogue TMDB.
 Voir le `CLAUDE.md` racine pour les règles communes au monorepo.
