@@ -6,6 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Peinture — Kodawari",
     short_name: "Peinture",
     description: "Inventaire de peintures pour figurines",
+    id: "/",
     start_url: "/",
     scope: "/",
     display: "standalone",

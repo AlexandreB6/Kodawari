@@ -6,6 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Cinéma — Kodawari",
     short_name: "Cinéma",
     description: "Ma collection de films et mes découvertes TMDB",
+    id: "/",
     start_url: "/",
     scope: "/",
     display: "standalone",

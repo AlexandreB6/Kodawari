@@ -73,6 +73,10 @@ Logique sans UI, importée par les 3 apps :
 - `AppShell.tsx` — coquille commune : bandeau démo, header, `<main>`,
   BottomNav, toasts, enregistrement du service worker. **Server component** :
   les icônes lui sont passées en `ReactNode`, jamais en composant.
+- `AppSwitcher.tsx` — pastilles 🎬 📚 🎨 du header vers les 2 autres apps.
+  URLs via `NEXT_PUBLIC_APP_URL_FILM|MANGA|PAINT`, avec repli sur les URLs de prod
+- `InstallPrompt.tsx` — bandeau « Installer l'app » : `beforeinstallprompt` sur
+  Chromium, marche à suivre sur iOS, masqué en standalone ou 30 j après fermeture
 - `BottomNav.tsx`, `ConfirmDialog.tsx`, `DemoBanner.tsx`, `LoginForm.tsx`,
   `PwaRegister.tsx`
 
