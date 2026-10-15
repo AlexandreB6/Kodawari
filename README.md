@@ -1,13 +1,13 @@
-# MyPersonalStuff
+# Kodawari
 
 Monorepo de trois applications indépendantes pour gérer mes collections personnelles.
 Chacune est une **PWA installable** sur téléphone, déployée séparément.
 
 | App | Dossier | Contenu | Port dev |
 |---|---|---|---|
-| 🎬 **Cinéma** | [`apps/cinema`](apps/cinema) | Films vus, notes 0.5–5 ★, découverte du catalogue TMDB | 3000 |
+| 🎬 **Cinéma** | [`apps/film`](apps/film) | Films vus, notes 0.5–5 ★, découverte du catalogue TMDB | 3000 |
 | 📚 **Manga** | [`apps/manga`](apps/manga) | Collection MyAnimeList, suivi des volumes, scan ISBN | 3001 |
-| 🎨 **Peinture** | [`apps/peinture`](apps/peinture) | Inventaire multi-gammes (Citadel, Monument Hobbies) | 3002 |
+| 🎨 **Peinture** | [`apps/paint`](apps/paint) | Inventaire multi-gammes (Citadel, Monument Hobbies) | 3002 |
 
 ## Pourquoi trois apps
 
@@ -21,7 +21,7 @@ mode démo, coquille d'UI) vit dans `packages/`.
 
 ```
 apps/
-  cinema/ manga/ peinture/     3 apps Next.js 16, une base Neon chacune
+  film/ manga/ paint/          3 apps Next.js 16, une base Neon chacune
 packages/
   core/                        demo mode, write-gate owner, apiFetch, utils
   ui/                          thème Tailwind, AppShell, BottomNav, dialogs
@@ -38,9 +38,9 @@ Les packages sont consommés en TypeScript brut : chaque app les déclare dans
 ```bash
 npm install                    # une seule fois, à la racine
 
-npm run dev:cinema             # http://localhost:3000
+npm run dev:film               # http://localhost:3000
 npm run dev:manga              # http://localhost:3001
-npm run dev:peinture           # http://localhost:3002
+npm run dev:paint              # http://localhost:3002
 
 npm run build:all              # build les 3
 npm run typecheck              # tsc --noEmit sur les 3
@@ -49,13 +49,13 @@ npm run typecheck              # tsc --noEmit sur les 3
 Chaque app a son propre `.env.local` — partir de son `.env.local.example`.
 
 ```bash
-cp apps/cinema/.env.local.example apps/cinema/.env.local
+cp apps/film/.env.local.example apps/film/.env.local
 ```
 
 Prisma se pilote depuis le dossier de l'app :
 
 ```bash
-cd apps/cinema
+cd apps/film
 npx prisma migrate dev --name <nom>
 npx prisma studio
 ```

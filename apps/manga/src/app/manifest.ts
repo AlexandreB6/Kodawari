@@ -3,7 +3,7 @@ import type { MetadataRoute } from "next";
 /** Manifest PWA — rend l'app installable sur l'écran d'accueil. */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Manga — MyPersonalStuff",
+    name: "Manga — Kodawari",
     short_name: "Manga",
     description: "Ma collection de mangas et le suivi des volumes possédés",
     start_url: "/",

@@ -1,7 +1,7 @@
 /**
  * Génère les icônes PWA des 3 apps à partir d'un SVG décrit ici.
  *
- *   node scripts/generate-icons.mjs [cinema|manga|peinture]
+ *   node scripts/generate-icons.mjs [film|manga|paint]
  *
  * Sort dans apps/<app>/public/ : icon-192, icon-512, icon-maskable-512
  * (glyphe rétréci pour la zone de sécurité Android) et apple-touch-icon.
@@ -18,7 +18,7 @@ const BG = "#0a0a0a";
 
 /** Glyphe dessiné dans un viewBox 0 0 100 100, centré. */
 const GLYPHS = {
-  cinema: {
+  film: {
     color: "#60a5fa",
     // Pellicule : cadre + perforations + séparateurs
     body: `
@@ -40,7 +40,7 @@ const GLYPHS = {
       <path d="M50 30 C58 22 72 20 84 22 L84 76 C72 74 58 76 50 82 Z" fill="none" stroke="C" stroke-width="6" stroke-linejoin="round"/>
       <line x1="50" y1="30" x2="50" y2="82" stroke="C" stroke-width="6"/>`,
   },
-  peinture: {
+  paint: {
     color: "#fbbf24",
     // Palette : disque + trois godets
     body: `

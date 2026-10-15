@@ -3,9 +3,9 @@ import type { MetadataRoute } from "next";
 /** Manifest PWA — rend l'app installable sur l'écran d'accueil. */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Peinture — MyPersonalStuff",
-    short_name: "Peinture",
-    description: "Inventaire de peintures pour figurines",
+    name: "Cinéma — Kodawari",
+    short_name: "Cinéma",
+    description: "Ma collection de films et mes découvertes TMDB",
     start_url: "/",
     scope: "/",
     display: "standalone",
