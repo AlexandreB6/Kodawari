@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0a0a0a",
+  themeColor: "#0e1a47",
   viewportFit: "cover",
 };
 
@@ -39,7 +39,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           appName="TCG"
           current="tcg"
           user={user}
-          icon={<Layers className="w-5 h-5 text-rose-400" aria-hidden="true" />}
+          icon={<Layers className="w-5 h-5 text-gold" aria-hidden="true" />}
           navItems={NAV_ITEMS}
         >
           {children}

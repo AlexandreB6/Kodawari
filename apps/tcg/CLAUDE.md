@@ -27,7 +27,9 @@ Voir le `CLAUDE.md` racine pour les règles communes au monorepo.
   finitions, et `cardImage()`. Les URLs d'image sont déduites de l'id Scryfall.
 - `src/lib/useCollection.ts` : état optimiste. Les PUT d'une même ligne
   sont chaînés, la dernière valeur gagne.
-- `src/components/` : `CatalogClient`, `MtgCard` (CTA au survol, « + »
+- `src/components/` : `CatalogClient`, `BinderPage` (page de classeur 4 × 3,
+  deux pages côte à côte sur grand écran), `BinderBook` (classeur feuilletable
+  de /collection : couverture, pages qui tournent en 3D, flèches et swipe), `MtgCard` (carte en pochette, CTA au survol, « + »
   permanent sur tactile), `CardDialog` (`<dialog>` natif), `Chip`
 - `prisma/schema.prisma` : modèle `OwnedCard` uniquement, une ligne par
   carte × finition × langue, unique `(scryfallId, finish, lang, userId)`
@@ -35,8 +37,11 @@ Voir le `CLAUDE.md` racine pour les règles communes au monorepo.
 ## Points d'attention
 
 - La base Neon s'appelle **`tcg`**.
+- Thème « menu FF » propre à l'app dans `globals.css` : tokens du mode sombre
+  redéfinis (bleu nuit), accent `gold` (`bg-gold`…), utilitaire `ff-window`.
 - Les images viennent de `cards.scryfall.io` en `<img>` simple : le CDN les
   sert déjà en cache 1 an. On n'utilise pas next/image.
 - La langue et la finition d'ajout rapide sont retenues en `localStorage`
-  (`tcg:quick-add`). Si la finition choisie n'existe pas pour une carte,
+  (`tcg:quick-add`), comme le mode d'affichage de /collection
+  (`tcg:collection-view`, pages ou classeur). Si la finition choisie n'existe pas pour une carte,
   on prend la première disponible.

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
-import { Search, Sparkles, X } from "lucide-react";
+import { BookOpen, LayoutGrid, Search, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@repo/core/utils";
 import {
@@ -26,12 +26,15 @@ import {
 } from "@/data/catalog";
 import { useCollection, type OwnedLine } from "@/lib/useCollection";
 import { MtgCard } from "./MtgCard";
+import { BinderPage, POCKETS_PER_PAGE } from "./BinderPage";
+import { BinderBook } from "./BinderBook";
 import { CardDialog } from "./CardDialog";
 import { Chip } from "./Chip";
 
-/** Nombre de cartes rendues d'un coup ; la suite arrive au défilement. */
-const PAGE = 120;
+/** Cartes rendues d'un coup (12 pages de classeur) ; la suite arrive au défilement. */
+const PAGE = POCKETS_PER_PAGE * 12;
 const PREFS_KEY = "tcg:quick-add";
+const VIEW_KEY = "tcg:collection-view";
 
 type Stock = "all" | "owned" | "missing";
 type Sort = "number" | "name" | "rarity";
@@ -123,6 +126,12 @@ export function CatalogClient({ initialOwned, mode }: Props) {
 
   // ── Rendu progressif ──
   const [visible, setVisible] = useState(PAGE);
+  const pages = useMemo(() => {
+    const shown = filtered.slice(0, visible);
+    return Array.from({ length: Math.ceil(shown.length / POCKETS_PER_PAGE) }, (_, i) =>
+      shown.slice(i * POCKETS_PER_PAGE, (i + 1) * POCKETS_PER_PAGE),
+    );
+  }, [filtered, visible]);
   useEffect(() => setVisible(PAGE), [deferredSearch, group, setCode, rarity, color, stock, foilOnly, sort]);
   const sentinel = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -157,6 +166,44 @@ export function CatalogClient({ initialOwned, mode }: Props) {
   // Une carte retirée du filtre (ex. « Possédées » à 0) reste ouverte.
   const openCardData = openId ? (CARD_MAP.get(openId) ?? null) : null;
 
+  const renderCard = useCallback(
+    (card: Card) => (
+      <MtgCard
+        key={card.id}
+        card={card}
+        summary={byCard.get(card.id)}
+        finish={finishFor(card, quickFinish)}
+        lang={quickLang}
+        onAdd={addCard}
+        onOpen={openCard}
+      />
+    ),
+    [byCard, quickFinish, quickLang, addCard, openCard],
+  );
+
+  // ── Affichage de la collection : pages à la suite, ou classeur à feuilleter ──
+  const [view, setView] = useState<"pages" | "book">("book");
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(VIEW_KEY);
+      if (saved === "pages" || saved === "book") setView(saved);
+    } catch {}
+  }, []);
+  const saveView = (v: "pages" | "book") => {
+    setView(v);
+    try {
+      localStorage.setItem(VIEW_KEY, v);
+    } catch {}
+  };
+  /** Le classeur ne rend que les pages ouvertes : il reçoit tout le filtre. */
+  const allPages = useMemo(
+    () =>
+      Array.from({ length: Math.ceil(filtered.length / POCKETS_PER_PAGE) }, (_, i) =>
+        filtered.slice(i * POCKETS_PER_PAGE, (i + 1) * POCKETS_PER_PAGE),
+      ),
+    [filtered],
+  );
+
   return (
     <div className="space-y-5">
       {mode === "collection" ? (
@@ -171,7 +218,7 @@ export function CatalogClient({ initialOwned, mode }: Props) {
       )}
 
       {/* Barre collante : recherche + réglages d'ajout rapide */}
-      <div className="sticky top-[calc(4.0625rem+env(safe-area-inset-top))] z-30 -mx-[var(--gutter,1rem)] border-b border-border/50 bg-background/90 px-[var(--gutter,1rem)] py-2.5 backdrop-blur-xl">
+      <div className="ff-window sticky top-[calc(4.0625rem+env(safe-area-inset-top)+0.5rem)] z-30 px-3 py-2.5 backdrop-blur-xl">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
           <div className="relative w-full sm:w-64" role="search">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
@@ -184,7 +231,7 @@ export function CatalogClient({ initialOwned, mode }: Props) {
               className="h-9 w-full rounded-md border border-input bg-background pl-9 pr-3 text-base sm:text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
             />
           </div>
-          <div className="flex items-center gap-1.5 overflow-x-auto sm:ml-auto" aria-label="Ajout rapide">
+          <div className="flex flex-wrap items-center gap-1.5 sm:ml-auto" aria-label="Ajout rapide">
             <span className="mr-1 shrink-0 text-xs text-muted-foreground">Ajout :</span>
             {MAIN_LANGUAGES.map((l) => (
               <Chip key={l.id} active={quickLang === l.id} onClick={() => savePrefs(l.id, quickFinish)} title={l.name}>
@@ -196,8 +243,8 @@ export function CatalogClient({ initialOwned, mode }: Props) {
               onChange={(e) => e.target.value && savePrefs(e.target.value as Lang, quickFinish)}
               aria-label="Autre langue d'ajout"
               className={cn(
-                "h-7 shrink-0 rounded-full border-0 px-2 text-xs font-medium focus:outline-none focus:ring-1 focus:ring-ring",
-                MAIN_LANGUAGES.some((l) => l.id === quickLang) ? "bg-muted text-muted-foreground" : "bg-rose-500 text-white",
+                "h-7 w-16 shrink-0 rounded-full border-0 px-2 text-xs font-medium focus:outline-none focus:ring-1 focus:ring-ring",
+                MAIN_LANGUAGES.some((l) => l.id === quickLang) ? "bg-muted text-muted-foreground" : "bg-gold font-semibold text-gold-foreground",
               )}
             >
               <option value="">…</option>
@@ -220,22 +267,23 @@ export function CatalogClient({ initialOwned, mode }: Props) {
       </div>
 
       {/* Filtres */}
-      <div className="space-y-2.5">
+      <div className="ff-window space-y-2.5 p-3">
         <div className="flex gap-1.5 overflow-x-auto pb-0.5">
           <Chip active={group === "all"} onClick={() => (setGroupFilter("all"), setSetCode("all"))}>
             Toutes les extensions
           </Chip>
           {SET_GROUPS.map((g) => (
-            <Chip
+            <SetChip
               key={g.id}
               active={group === g.id}
               onClick={() => {
                 setGroupFilter(group === g.id ? "all" : g.id);
                 setSetCode("all");
               }}
-            >
-              {g.label}
-            </Chip>
+              label={g.label}
+              title={g.name}
+              icon={SET_MAP.get(g.id)?.icon}
+            />
           ))}
         </div>
 
@@ -247,7 +295,8 @@ export function CatalogClient({ initialOwned, mode }: Props) {
                 key={s.code}
                 active={setCode === s.code}
                 onClick={() => setSetCode(setCode === s.code ? "all" : s.code)}
-                label={s.name}
+                label={s.code.toUpperCase()}
+                title={s.name}
                 icon={s.icon}
                 count={s.count}
               />
@@ -313,25 +362,47 @@ export function CatalogClient({ initialOwned, mode }: Props) {
         </div>
       </div>
 
-      <p className="text-sm text-muted-foreground" aria-live="polite">
-        {filtered.length} carte{filtered.length !== 1 ? "s" : ""}
-        {stock === "all" && filtered.length > 0 && ` · ${ownedInFilter} possédée${ownedInFilter !== 1 ? "s" : ""}`}
-      </p>
-
-      <div className="grid grid-cols-2 gap-x-3 gap-y-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-        {filtered.slice(0, visible).map((card) => (
-          <MtgCard
-            key={card.id}
-            card={card}
-            summary={byCard.get(card.id)}
-            finish={finishFor(card, quickFinish)}
-            lang={quickLang}
-            onAdd={addCard}
-            onOpen={openCard}
-          />
-        ))}
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm text-muted-foreground" aria-live="polite">
+          {filtered.length} carte{filtered.length !== 1 ? "s" : ""}
+          {stock === "all" && filtered.length > 0 && ` · ${ownedInFilter} possédée${ownedInFilter !== 1 ? "s" : ""}`}
+        </p>
+        {mode === "collection" && (
+          <div className="flex gap-1" aria-label="Affichage">
+            <Chip active={view === "pages"} onClick={() => saveView("pages")} title="Toutes les pages à la suite">
+              <LayoutGrid className="h-3.5 w-3.5" aria-hidden="true" />
+              Pages
+            </Chip>
+            <Chip active={view === "book"} onClick={() => saveView("book")} title="Feuilleter le classeur">
+              <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
+              Classeur
+            </Chip>
+          </div>
+        )}
       </div>
-      <div ref={sentinel} aria-hidden="true" />
+
+      {mode === "collection" && view === "book" ? (
+        <BinderBook
+          pages={allPages}
+          renderCard={renderCard}
+          title="Final Fantasy"
+          subtitle={`Ma collection · ${byCard.size} carte${byCard.size !== 1 ? "s" : ""}`}
+          keyboard={!openId}
+        />
+      ) : (
+        <>
+          {/* Pages de classeur à la suite, deux côte à côte sur grand écran */}
+          <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
+            {pages.map((cards, i) => (
+              // content-visibility : les pages hors de l'écran ne sont pas peintes
+              <div key={i} className="[content-visibility:auto] [contain-intrinsic-size:auto_900px]">
+                <BinderPage number={i + 1}>{cards.map(renderCard)}</BinderPage>
+              </div>
+            ))}
+          </div>
+          <div ref={sentinel} aria-hidden="true" />
+        </>
+      )}
 
       {filtered.length === 0 && (
         <p className="py-12 text-center text-muted-foreground">
@@ -356,23 +427,26 @@ export function CatalogClient({ initialOwned, mode }: Props) {
   );
 }
 
-/** Pastille d'un set, avec son symbole Scryfall. */
+/** Pastille d'un set : symbole Scryfall, code, nom complet en infobulle. */
 function SetChip({
   active,
   onClick,
   label,
+  title,
   icon,
   count,
 }: {
   active: boolean;
   onClick: () => void;
   label: string;
+  title?: string;
   icon?: string;
   count?: number;
 }) {
   return (
-    <Chip active={active} onClick={onClick}>
-      {icon && <img src={icon} alt="" className="h-3.5 w-3.5 invert" />}
+    <Chip active={active} onClick={onClick} title={title}>
+      {/* Symbole noir : inversé en blanc sur fond bleu, gardé noir sur l'or */}
+      {icon && <img src={icon} alt="" className={cn("h-3.5 w-3.5", !active && "invert")} />}
       {label}
       {count !== undefined && <span className="opacity-60">{count}</span>}
     </Chip>
@@ -415,7 +489,7 @@ function CollectionStats({ lines, uniqueOwned }: { lines: Map<string, OwnedLine>
               </span>
             ))}
           </div>
-          <div className="grid gap-x-6 gap-y-2 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="ff-window grid gap-x-6 gap-y-2.5 p-4 sm:grid-cols-2 lg:grid-cols-3">
             {SETS.filter((s) => stats.bySet.has(s.code)).map((s) => {
               const owned = stats.bySet.get(s.code)!.size;
               return (
@@ -428,7 +502,7 @@ function CollectionStats({ lines, uniqueOwned }: { lines: Map<string, OwnedLine>
                     </span>
                   </div>
                   <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-                    <div className="h-full rounded-full bg-rose-500" style={{ width: `${(owned / s.count) * 100}%` }} />
+                    <div className="h-full rounded-full bg-gold" style={{ width: `${(owned / s.count) * 100}%` }} />
                   </div>
                 </div>
               );

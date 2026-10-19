@@ -33,13 +33,16 @@ export interface MtgSet {
   count: number;
 }
 
-/** Groupes d'extensions affichés dans les filtres, dans cet ordre. */
+/**
+ * Groupes d'extensions affichés dans les filtres, dans cet ordre. Les 3 sets
+ * racine s'affichent par leur code, le nom complet passe en infobulle.
+ */
 export const SET_GROUPS = [
-  { id: "fin", label: "Final Fantasy" },
-  { id: "fic", label: "Commander" },
-  { id: "fca", label: "Through the Ages" },
-  { id: "tokens", label: "Jetons" },
-  { id: "extras", label: "Promos & art" },
+  { id: "fin", label: "FIN", name: "Final Fantasy" },
+  { id: "fic", label: "FIC", name: "Final Fantasy Commander" },
+  { id: "fca", label: "FCA", name: "Final Fantasy: Through the Ages" },
+  { id: "tokens", label: "Jetons", name: "Jetons (TFIN, TFIC…)" },
+  { id: "extras", label: "Promos & art", name: "Promos, art series, scene box…" },
 ] as const;
 
 export type SetGroup = (typeof SET_GROUPS)[number]["id"];

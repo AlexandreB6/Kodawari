@@ -94,7 +94,7 @@ export function CardDialog({
       }}
       // Clic sur le fond (hors du contenu) : fermeture.
       onClick={(e) => e.target === e.currentTarget && onClose()}
-      className="m-auto w-full max-w-3xl max-h-[92dvh] overflow-y-auto rounded-2xl border border-border bg-background p-0 text-foreground backdrop:bg-black/70 backdrop:backdrop-blur-sm"
+      className="m-auto w-full max-w-3xl max-h-[92dvh] overflow-y-auto ff-window p-0 text-foreground backdrop:bg-[oklch(0.1_0.05_268/0.75)] backdrop:backdrop-blur-sm"
     >
       {card && (
         <div className="grid gap-5 p-4 sm:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] sm:p-6">
@@ -128,7 +128,7 @@ export function CardDialog({
                 <h2 className="text-xl font-bold leading-tight">{card.name}</h2>
                 <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
                   {set && <img src={set.icon} alt="" className="h-4 w-4 invert opacity-80" />}
-                  <span className="truncate">{set?.name}</span>
+                  <span className="truncate">{set && `${set.code.toUpperCase()} · ${set.name}`}</span>
                   <span className="tabular-nums">· #{card.cn}</span>
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -154,7 +154,7 @@ export function CardDialog({
             {/* Exemplaires possédés */}
             <section className="space-y-2">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Ma collection {summary && <span className="text-rose-400">· {summary.total}</span>}
+                Ma collection {summary && <span className="text-gold">· {summary.total}</span>}
               </h3>
               {lines.length === 0 ? (
                 <p className="text-sm text-muted-foreground">Aucun exemplaire pour l&apos;instant.</p>
@@ -214,7 +214,7 @@ export function CardDialog({
               <button
                 type="button"
                 onClick={() => setQuantity(card.id, finish, lang, quantityOf(card.id, finish, lang) + 1)}
-                className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-rose-500 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-rose-400 cursor-pointer"
+                className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-gold px-3 py-2 text-sm font-semibold text-gold-foreground transition hover:brightness-110 cursor-pointer"
               >
                 <Plus className="h-4 w-4" aria-hidden="true" />
                 Ajouter · {LANG_LABEL[lang]} · {FINISH_LABEL[finish]}
@@ -258,7 +258,7 @@ function Stepper({ label, value, onChange }: { label: string; value: number; onC
         type="button"
         onClick={() => onChange(value + 1)}
         aria-label={`Ajouter un exemplaire ${label}`}
-        className="flex h-7 w-7 items-center justify-center rounded-md bg-muted hover:bg-rose-500/20 hover:text-rose-300 transition-colors cursor-pointer"
+        className="flex h-7 w-7 items-center justify-center rounded-md bg-muted hover:bg-gold/20 hover:text-gold transition-colors cursor-pointer"
       >
         <Plus className="h-3 w-3" aria-hidden="true" />
       </button>
