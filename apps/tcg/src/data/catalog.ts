@@ -6,7 +6,8 @@
 import cardsJson from "./cards.json";
 import setsJson from "./sets.json";
 
-export type Finish = "nonfoil" | "foil" | "etched";
+/** « signed » : art card à signature d'artiste dorée (Art Series uniquement) */
+export type Finish = "nonfoil" | "foil" | "etched" | "signed";
 
 export interface Card {
   /** Identifiant Scryfall de l'impression */
@@ -21,6 +22,8 @@ export interface Card {
   finishes: Finish[];
   /** Double face : une image par face */
   dfc?: boolean;
+  /** Identifiant produit Cardmarket (absent pour la plupart des jetons) */
+  cm?: number;
 }
 
 export interface MtgSet {
@@ -82,12 +85,20 @@ export function cardImage(id: string, size: "normal" | "large" = "normal", face:
   return `https://cards.scryfall.io/${size}/${face}/${id[0]}/${id[1]}/${id}.jpg`;
 }
 
+/** Fiche produit Cardmarket, en français. */
+export function cardmarketUrl(idProduct: number) {
+  return `https://www.cardmarket.com/fr/Magic/Products?idProduct=${idProduct}`;
+}
+
 export const FINISHES: { id: Finish; label: string }[] = [
   { id: "nonfoil", label: "Normale" },
   { id: "foil", label: "Foil" },
   { id: "etched", label: "Etched" },
+  { id: "signed", label: "Signée" },
 ];
 export const FINISH_LABEL = Object.fromEntries(FINISHES.map((f) => [f.id, f.label])) as Record<Finish, string>;
+
+export const isFoil = (f: Finish) => f === "foil" || f === "etched";
 
 /** Langues d'impression Magic. Les 3 premières sont mises en avant. */
 export const LANGUAGES = [

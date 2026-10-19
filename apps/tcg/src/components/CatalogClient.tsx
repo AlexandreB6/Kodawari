@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
-import { BookOpen, LayoutGrid, Search, Sparkles, X } from "lucide-react";
+import { BookOpen, LayoutGrid, Search, SlidersHorizontal, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@repo/core/utils";
 import {
@@ -10,6 +10,7 @@ import {
   COLORS,
   compareCards,
   FINISH_LABEL,
+  isFoil,
   LANG_LABEL,
   LANGUAGES,
   MAIN_LANGUAGES,
@@ -25,6 +26,8 @@ import {
   type SetGroup,
 } from "@/data/catalog";
 import { useCollection, type OwnedLine } from "@/lib/useCollection";
+import { formatEur, missingPrice, unitPrice, type LangCoefficients, type PriceGuide } from "@/lib/pricing";
+import { PriceSettings, useLangCoefficients } from "./PriceSettings";
 import { MtgCard } from "./MtgCard";
 import { BinderPage, POCKETS_PER_PAGE } from "./BinderPage";
 import { BinderBook } from "./BinderBook";
@@ -37,10 +40,12 @@ const PREFS_KEY = "tcg:quick-add";
 const VIEW_KEY = "tcg:collection-view";
 
 type Stock = "all" | "owned" | "missing";
-type Sort = "number" | "name" | "rarity";
+type Sort = "number" | "name" | "rarity" | "price";
 
 interface Props {
   initialOwned: OwnedLine[];
+  /** Prix tendance Cardmarket (voir lib/prices.ts) */
+  guide: PriceGuide;
   /** « collection » : ouvre sur les cartes possédées, avec les statistiques */
   mode: "catalog" | "collection";
 }
@@ -52,8 +57,24 @@ const finishFor = (card: Card, wanted: Finish) => (card.finishes.includes(wanted
  * Catalogue Final Fantasy et collection de l'utilisateur : filtres, grille
  * avec ajout rapide au survol, détail d'une carte en dialog.
  */
-export function CatalogClient({ initialOwned, mode }: Props) {
+export function CatalogClient({ initialOwned, guide, mode }: Props) {
   const { byCard, lines, setQuantity, quantityOf } = useCollection(initialOwned);
+  const [coefficients, setCoefficients] = useLangCoefficients();
+
+  /** Valeur estimée des exemplaires d'une carte (null : aucun n'est coté). */
+  const cardValue = useCallback(
+    (card: Card) => {
+      const summary = byCard.get(card.id);
+      if (!summary) return null;
+      let total: number | null = null;
+      for (const l of summary.lines) {
+        const p = unitPrice(guide, card, l.finish, l.lang, coefficients);
+        if (p !== null) total = (total ?? 0) + p * l.quantity;
+      }
+      return total;
+    },
+    [byCard, guide, coefficients],
+  );
 
   // ── Ajout rapide : langue et finition, retenues d'une visite à l'autre ──
   const [quickLang, setQuickLang] = useState<Lang>("en");
@@ -119,10 +140,25 @@ export function CatalogClient({ initialOwned, mode }: Props) {
     if (sort === "name") list.sort((a, b) => a.name.localeCompare(b.name) || compareCards(a, b));
     if (sort === "rarity")
       list.sort((a, b) => RARITY_RANK[b.rarity] - RARITY_RANK[a.rarity] || compareCards(a, b));
+    // Prix décroissant, version normale de référence ; cartes sans cote à la fin
+    if (sort === "price")
+      list.sort((a, b) => (missingPrice(guide, b) ?? -1) - (missingPrice(guide, a) ?? -1) || compareCards(a, b));
     return list;
-  }, [deferredSearch, group, setCode, rarity, color, stock, foilOnly, sort, byCard]);
+  }, [deferredSearch, group, setCode, rarity, color, stock, foilOnly, sort, byCard, guide]);
 
   const ownedInFilter = useMemo(() => filtered.filter((c) => byCard.has(c.id)).length, [filtered, byCard]);
+
+  /** Valeur des cartes possédées du filtre, et coût des manquantes. */
+  const filterValue = useMemo(() => {
+    let owned = 0;
+    let missing = 0;
+    for (const c of filtered) {
+      if (byCard.has(c.id)) owned += cardValue(c) ?? 0;
+      else missing += missingPrice(guide, c) ?? 0;
+    }
+    return { owned, missing };
+  }, [filtered, byCard, cardValue, guide]);
+  const hasPrices = guide.date !== null;
 
   // ── Rendu progressif ──
   const [visible, setVisible] = useState(PAGE);
@@ -207,7 +243,13 @@ export function CatalogClient({ initialOwned, mode }: Props) {
   return (
     <div className="space-y-5">
       {mode === "collection" ? (
-        <CollectionStats lines={lines} uniqueOwned={byCard.size} />
+        <CollectionStats
+          lines={lines}
+          uniqueOwned={byCard.size}
+          guide={guide}
+          coefficients={coefficients}
+          onCoefficientsChange={setCoefficients}
+        />
       ) : (
         <div>
           <h1 className="text-4xl font-extrabold tracking-tight">Final Fantasy</h1>
@@ -358,6 +400,7 @@ export function CatalogClient({ initialOwned, mode }: Props) {
             <option value="number">Tri : numéro</option>
             <option value="name">Tri : nom</option>
             <option value="rarity">Tri : rareté</option>
+            {hasPrices && <option value="price">Tri : prix</option>}
           </select>
         </div>
       </div>
@@ -366,6 +409,16 @@ export function CatalogClient({ initialOwned, mode }: Props) {
         <p className="text-sm text-muted-foreground" aria-live="polite">
           {filtered.length} carte{filtered.length !== 1 ? "s" : ""}
           {stock === "all" && filtered.length > 0 && ` · ${ownedInFilter} possédée${ownedInFilter !== 1 ? "s" : ""}`}
+          {hasPrices && filtered.length > 0 && (
+            <>
+              {stock !== "missing" && ownedInFilter > 0 && (
+                <span className="text-gold"> · ≈ {formatEur(filterValue.owned)}</span>
+              )}
+              {stock !== "owned" && filtered.length > ownedInFilter && (
+                <span> · {formatEur(filterValue.missing)} pour compléter</span>
+              )}
+            </>
+          )}
         </p>
         {mode === "collection" && (
           <div className="flex gap-1" aria-label="Affichage">
@@ -417,6 +470,8 @@ export function CatalogClient({ initialOwned, mode }: Props) {
         summary={openId ? byCard.get(openId) : undefined}
         defaultFinish={quickFinish}
         defaultLang={quickLang}
+        guide={guide}
+        coefficients={coefficients}
         quantityOf={quantityOf}
         setQuantity={setQuantity}
         onPrev={openIndex > 0 ? () => setOpenId(filtered[openIndex - 1].id) : undefined}
@@ -453,24 +508,68 @@ function SetChip({
   );
 }
 
-/** En-tête de /collection : totaux, progression par extension, langues. */
-function CollectionStats({ lines, uniqueOwned }: { lines: Map<string, OwnedLine>; uniqueOwned: number }) {
+/**
+ * En-tête de /collection : totaux, valeur estimée et coût pour compléter,
+ * progression par extension, langues, réglage des coefficients de langue.
+ */
+function CollectionStats({
+  lines,
+  uniqueOwned,
+  guide,
+  coefficients,
+  onCoefficientsChange,
+}: {
+  lines: Map<string, OwnedLine>;
+  uniqueOwned: number;
+  guide: PriceGuide;
+  coefficients: LangCoefficients;
+  onCoefficientsChange: (next: LangCoefficients) => void;
+}) {
+  const [showSettings, setShowSettings] = useState(false);
+
   const stats = useMemo(() => {
     let copies = 0;
     let foils = 0;
+    let value = 0;
+    let unpriced = 0;
     const byLang = new Map<Lang, number>();
-    const bySet = new Map<string, Set<string>>();
+    const bySet = new Map<string, { owned: Set<string>; value: number; missing: number }>();
+    const setStats = (code: string) => {
+      if (!bySet.has(code)) bySet.set(code, { owned: new Set(), value: 0, missing: 0 });
+      return bySet.get(code)!;
+    };
+
     for (const l of lines.values()) {
       copies += l.quantity;
-      if (l.finish !== "nonfoil") foils += l.quantity;
+      if (isFoil(l.finish)) foils += l.quantity;
       byLang.set(l.lang, (byLang.get(l.lang) ?? 0) + l.quantity);
-      const set = SET_MAP.get(CARD_MAP.get(l.scryfallId)?.set ?? "");
-      if (!set) continue;
-      if (!bySet.has(set.code)) bySet.set(set.code, new Set());
-      bySet.get(set.code)!.add(l.scryfallId);
+      const card = CARD_MAP.get(l.scryfallId);
+      if (!card) continue;
+      const s = setStats(card.set);
+      s.owned.add(card.id);
+      const p = unitPrice(guide, card, l.finish, l.lang, coefficients);
+      if (p === null) unpriced += l.quantity;
+      else {
+        value += p * l.quantity;
+        s.value += p * l.quantity;
+      }
     }
-    return { copies, foils, byLang, bySet };
-  }, [lines]);
+
+    // Manquantes : seulement dans les extensions entamées pour le détail,
+    // mais sur tout le catalogue pour le total.
+    let missing = 0;
+    let missingCount = 0;
+    for (const card of CARDS) {
+      if (bySet.get(card.set)?.owned.has(card.id)) continue;
+      missingCount++;
+      const p = missingPrice(guide, card) ?? 0;
+      missing += p;
+      if (bySet.has(card.set)) bySet.get(card.set)!.missing += p;
+    }
+    return { copies, foils, value, unpriced, missing, missingCount, byLang, bySet };
+  }, [lines, guide, coefficients]);
+
+  const hasPrices = guide.date !== null;
 
   return (
     <div className="space-y-4">
@@ -480,35 +579,79 @@ function CollectionStats({ lines, uniqueOwned }: { lines: Map<string, OwnedLine>
           {uniqueOwned} cartes · {stats.copies} exemplaires · {stats.foils} foil{stats.foils !== 1 ? "s" : ""}
         </p>
       </div>
+
+      {hasPrices ? (
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="ff-window p-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Valeur estimée</p>
+            <p className="mt-1 text-3xl font-extrabold tabular-nums text-gold">{formatEur(stats.value)}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Tendance Cardmarket × langue, état NM
+              {stats.unpriced > 0 && ` · ${stats.unpriced} exemplaire${stats.unpriced > 1 ? "s" : ""} sans cote`}
+            </p>
+          </div>
+          <div className="ff-window p-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Pour compléter</p>
+            <p className="mt-1 text-3xl font-extrabold tabular-nums">{formatEur(stats.missing)}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {stats.missingCount} cartes manquantes, en version normale NM anglaise
+            </p>
+          </div>
+        </div>
+      ) : (
+        <p className="text-sm text-muted-foreground">Prix Cardmarket indisponibles pour le moment.</p>
+      )}
+
+      <div className="flex flex-wrap items-center gap-1.5">
+        {[...stats.byLang].sort((a, b) => b[1] - a[1]).map(([lang, n]) => (
+          <span key={lang} className="rounded-full bg-muted px-3 py-1 text-xs font-medium">
+            {LANG_LABEL[lang]} <span className="text-muted-foreground">{n}</span>
+          </span>
+        ))}
+        {hasPrices && (
+          <>
+            <Chip active={showSettings} onClick={() => setShowSettings((v) => !v)}>
+              <SlidersHorizontal className="h-3 w-3" aria-hidden="true" />
+              Prix par langue
+            </Chip>
+            <span className="ml-auto text-[11px] text-muted-foreground">
+              Prix Cardmarket du {new Date(guide.date!).toLocaleDateString("fr-FR")}
+            </span>
+          </>
+        )}
+      </div>
+
+      {showSettings && <PriceSettings coefficients={coefficients} onChange={onCoefficientsChange} />}
+
       {stats.copies > 0 && (
-        <>
-          <div className="flex flex-wrap gap-1.5">
-            {[...stats.byLang].sort((a, b) => b[1] - a[1]).map(([lang, n]) => (
-              <span key={lang} className="rounded-full bg-muted px-3 py-1 text-xs font-medium">
-                {LANG_LABEL[lang]} <span className="text-muted-foreground">{n}</span>
-              </span>
-            ))}
-          </div>
-          <div className="ff-window grid gap-x-6 gap-y-2.5 p-4 sm:grid-cols-2 lg:grid-cols-3">
-            {SETS.filter((s) => stats.bySet.has(s.code)).map((s) => {
-              const owned = stats.bySet.get(s.code)!.size;
-              return (
-                <div key={s.code} className="space-y-1">
-                  <div className="flex items-center gap-1.5 text-xs">
-                    <img src={s.icon} alt="" className="h-3.5 w-3.5 invert opacity-80" />
-                    <span className="truncate">{s.name}</span>
-                    <span className="ml-auto tabular-nums text-muted-foreground">
-                      {owned} / {s.count}
-                    </span>
-                  </div>
-                  <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-                    <div className="h-full rounded-full bg-gold" style={{ width: `${(owned / s.count) * 100}%` }} />
-                  </div>
+        <div className="ff-window grid gap-x-6 gap-y-3 p-4 sm:grid-cols-2 lg:grid-cols-3">
+          {SETS.filter((s) => stats.bySet.has(s.code)).map((s) => {
+            const set = stats.bySet.get(s.code)!;
+            const owned = set.owned.size;
+            return (
+              <div key={s.code} className="space-y-1">
+                <div className="flex items-center gap-1.5 text-xs">
+                  <img src={s.icon} alt="" className="h-3.5 w-3.5 invert opacity-80" />
+                  <span className="truncate" title={s.name}>
+                    {s.code.toUpperCase()}
+                  </span>
+                  <span className="ml-auto tabular-nums text-muted-foreground">
+                    {owned} / {s.count}
+                  </span>
                 </div>
-              );
-            })}
-          </div>
-        </>
+                <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                  <div className="h-full rounded-full bg-gold" style={{ width: `${(owned / s.count) * 100}%` }} />
+                </div>
+                {hasPrices && (
+                  <p className="flex justify-between text-[11px] tabular-nums text-muted-foreground">
+                    <span className="text-gold">{formatEur(set.value)}</span>
+                    <span>{set.missing > 0 ? `${formatEur(set.missing)} pour compléter` : "Complet !"}</span>
+                  </p>
+                )}
+              </div>
+            );
+          })}
+        </div>
       )}
     </div>
   );

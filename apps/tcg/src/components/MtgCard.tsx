@@ -1,9 +1,17 @@
 "use client";
 
 import { memo } from "react";
-import { Plus, Sparkles } from "lucide-react";
+import { ExternalLink, Plus, Signature, Sparkles } from "lucide-react";
 import { cn } from "@repo/core/utils";
-import { cardImage, FINISH_LABEL, LANG_LABEL, type Card, type Finish, type Lang } from "@/data/catalog";
+import {
+  cardImage,
+  cardmarketUrl,
+  FINISH_LABEL,
+  LANG_LABEL,
+  type Card,
+  type Finish,
+  type Lang,
+} from "@/data/catalog";
 import type { CardSummary } from "@/lib/useCollection";
 
 interface Props {
@@ -79,6 +87,11 @@ export const MtgCard = memo(function MtgCard({ card, summary, finish, lang, onAd
                 <Sparkles className="h-3 w-3" aria-label="Foil" />
               </span>
             )}
+            {summary.signed && (
+              <span className="rounded-full bg-black/70 p-0.5 text-amber-300 shadow" title="Signée">
+                <Signature className="h-3 w-3" aria-label="Signée" />
+              </span>
+            )}
           </div>
         )}
         {owned && (
@@ -101,15 +114,29 @@ export const MtgCard = memo(function MtgCard({ card, summary, finish, lang, onAd
             "[@media(hover:none)]:hidden",
           )}
         >
-          <button
-            type="button"
-            onClick={() => onAdd(card)}
-            aria-label={addLabel}
-            className="flex w-full items-center justify-center gap-1 rounded-md bg-gold px-2 py-1 text-xs font-semibold text-gold-foreground shadow-lg transition hover:brightness-110 cursor-pointer"
-          >
-            <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-            Ajouter
-          </button>
+          <div className="flex w-full gap-1">
+            <button
+              type="button"
+              onClick={() => onAdd(card)}
+              aria-label={addLabel}
+              className="flex flex-1 items-center justify-center gap-1 rounded-md bg-gold px-2 py-1 text-xs font-semibold text-gold-foreground shadow-lg transition hover:brightness-110 cursor-pointer"
+            >
+              <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+              Ajouter
+            </button>
+            {card.cm && (
+              <a
+                href={cardmarketUrl(card.cm)}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`Voir ${card.name} sur Cardmarket`}
+                title="Voir sur Cardmarket"
+                className="flex shrink-0 items-center justify-center rounded-md bg-white/15 px-1.5 text-white shadow-lg transition-colors hover:bg-white/30"
+              >
+                <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+              </a>
+            )}
+          </div>
           <span className="text-[10px] font-medium text-white/80">
             {LANG_LABEL[lang]} · {FINISH_LABEL[finish]}
           </span>

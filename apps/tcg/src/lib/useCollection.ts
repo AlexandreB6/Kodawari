@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useRef, useState } from "react";
 import { apiFetch } from "@repo/core/apiFetch";
-import type { Finish, Lang } from "@/data/catalog";
+import { isFoil, type Finish, type Lang } from "@/data/catalog";
 
 /** Une ligne de possession : exemplaires d'une carte dans une finition et une langue. */
 export interface OwnedLine {
@@ -16,6 +16,7 @@ export interface OwnedLine {
 export interface CardSummary {
   total: number;
   foil: boolean;
+  signed: boolean;
   langs: Lang[];
   lines: OwnedLine[];
 }
@@ -64,9 +65,10 @@ export function useCollection(initial: OwnedLine[]) {
     const map = new Map<string, CardSummary>();
     for (const line of lines.values()) {
       let s = map.get(line.scryfallId);
-      if (!s) map.set(line.scryfallId, (s = { total: 0, foil: false, langs: [], lines: [] }));
+      if (!s) map.set(line.scryfallId, (s = { total: 0, foil: false, signed: false, langs: [], lines: [] }));
       s.total += line.quantity;
-      s.foil ||= line.finish !== "nonfoil";
+      s.foil ||= isFoil(line.finish);
+      s.signed ||= line.finish === "signed";
       if (!s.langs.includes(line.lang)) s.langs.push(line.lang);
       s.lines.push(line);
     }

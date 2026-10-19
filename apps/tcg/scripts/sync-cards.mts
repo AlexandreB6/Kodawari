@@ -45,6 +45,8 @@ interface ScryfallCard {
   colors?: string[];
   type_line?: string;
   finishes: string[];
+  layout: string;
+  cardmarket_id?: number;
   card_faces?: { colors?: string[]; type_line?: string; image_uris?: unknown }[];
   image_uris?: unknown;
 }
@@ -73,9 +75,15 @@ for (const set of sets) {
         rarity: c.rarity,
         colors: c.colors ?? front?.colors ?? [],
         type: (front?.type_line ?? c.type_line ?? "").split(" — ")[0],
-        finishes: c.finishes,
+        // Scryfall ne distingue pas les art cards signées (signature dorée) :
+        // elles sont suivies comme une finition à part. La Scene Box a le même
+        // layout mais n'existe pas en version signée, d'où le filtre sur le set.
+        finishes:
+          c.layout === "art_series" && set.name.endsWith("Art Series") ? [...c.finishes, "signed"] : c.finishes,
         // Double face : chaque face a sa propre image (pas d'image_uris racine).
         ...(c.card_faces && !c.image_uris ? { dfc: true } : {}),
+        // Produit Cardmarket : clé du price guide (src/lib/prices.ts)
+        ...(c.cardmarket_id ? { cm: c.cardmarket_id } : {}),
       });
       count++;
     }

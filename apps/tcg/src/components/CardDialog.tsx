@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Minus, Plus, RefreshCw, Sparkles, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, ExternalLink, Minus, Plus, RefreshCw, Signature, Sparkles, X } from "lucide-react";
 import { cn } from "@repo/core/utils";
 import {
   cardImage,
+  cardmarketUrl,
   FINISH_LABEL,
   LANG_LABEL,
   LANGUAGES,
@@ -16,6 +17,7 @@ import {
   type Lang,
 } from "@/data/catalog";
 import type { CardSummary } from "@/lib/useCollection";
+import { basePrice, formatEur, unitPrice, type LangCoefficients, type PriceGuide } from "@/lib/pricing";
 import { Chip } from "./Chip";
 
 interface Props {
@@ -24,6 +26,8 @@ interface Props {
   /** Réglages d'ajout rapide : valeurs initiales de la ligne « Ajouter » */
   defaultFinish: Finish;
   defaultLang: Lang;
+  guide: PriceGuide;
+  coefficients: LangCoefficients;
   quantityOf: (id: string, finish: Finish, lang: Lang) => number;
   setQuantity: (id: string, finish: Finish, lang: Lang, quantity: number) => void;
   onPrev?: () => void;
@@ -41,6 +45,8 @@ export function CardDialog({
   summary,
   defaultFinish,
   defaultLang,
+  guide,
+  coefficients,
   quantityOf,
   setQuantity,
   onPrev,
@@ -140,6 +146,31 @@ export function CardDialog({
                     </>
                   )}
                 </p>
+                {/* Prix tendance Cardmarket par finition (en anglais, NM) */}
+                {guide.prices[card.id] && (
+                  <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                    {card.finishes.map((f) => {
+                      const p = basePrice(guide, card, f);
+                      return p === null ? null : (
+                        <span key={f} className="tabular-nums">
+                          <span className="text-muted-foreground">{FINISH_LABEL[f]} </span>
+                          <span className="font-semibold text-gold">{formatEur(p)}</span>
+                        </span>
+                      );
+                    })}
+                    {card.cm && (
+                      <a
+                        href={cardmarketUrl(card.cm)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                      >
+                        Cardmarket
+                        <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                      </a>
+                    )}
+                  </p>
+                )}
               </div>
               <button
                 type="button"
@@ -166,9 +197,10 @@ export function CardDialog({
                         {LANG_LABEL[l.lang]}
                       </span>
                       <span className={cn("flex flex-1 items-center gap-1 text-sm", l.finish !== "nonfoil" && "text-amber-300")}>
-                        {l.finish !== "nonfoil" && <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />}
+                        <FinishIcon finish={l.finish} className="h-3.5 w-3.5" />
                         {FINISH_LABEL[l.finish]}
                       </span>
+                      <LinePrice unit={unitPrice(guide, card, l.finish, l.lang, coefficients)} quantity={l.quantity} />
                       <Stepper
                         label={`${LANG_LABEL[l.lang]} ${FINISH_LABEL[l.finish]}`}
                         value={l.quantity}
@@ -206,7 +238,7 @@ export function CardDialog({
               <div className="flex flex-wrap items-center gap-1.5">
                 {card.finishes.map((f) => (
                   <Chip key={f} active={finish === f} onClick={() => setFinish(f)}>
-                    {f !== "nonfoil" && <Sparkles className="h-3 w-3" aria-hidden="true" />}
+                    <FinishIcon finish={f} className="h-3 w-3" />
                     {FINISH_LABEL[f]}
                   </Chip>
                 ))}
@@ -238,6 +270,26 @@ export function CardDialog({
         </div>
       )}
     </dialog>
+  );
+}
+
+/** Reflet pour les foils, plume pour les art cards signées, rien pour une carte normale. */
+function FinishIcon({ finish, className }: { finish: Finish; className: string }) {
+  if (finish === "signed") return <Signature className={className} aria-hidden="true" />;
+  if (finish !== "nonfoil") return <Sparkles className={className} aria-hidden="true" />;
+  return null;
+}
+
+/** Valeur estimée d'une ligne (prix unitaire en infobulle), « — » sans cote. */
+function LinePrice({ unit, quantity }: { unit: number | null; quantity: number }) {
+  if (unit === null) return <span className="text-xs text-muted-foreground">—</span>;
+  return (
+    <span
+      className="text-xs tabular-nums text-gold"
+      title={quantity > 1 ? `${formatEur(unit)} l'exemplaire` : "Tendance Cardmarket × coefficient de langue"}
+    >
+      ≈ {formatEur(unit * quantity)}
+    </span>
   );
 }
 
