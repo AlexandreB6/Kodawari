@@ -20,10 +20,10 @@ sur téléphone, déployée séparément.
 ## Pourquoi trois apps
 
 Le projet était à l'origine une seule application avec trois espaces et un dashboard
-commun. Les trois domaines n'ont aucune donnée en commun : les séparer donne trois
+commun. Les trois domaines n'ont aucune donnée métier en commun : les séparer donne trois
 icônes distinctes sur l'écran d'accueil du téléphone, trois cycles de déploiement et
-trois bases indépendantes. Le code réellement transverse (thème, write-gate,
-mode démo, coquille d'UI) vit dans `packages/`.
+trois bases indépendantes. Seuls les comptes sont partagés, dans une base `auth`.
+Le code réellement transverse (comptes, thème, coquille d'UI) vit dans `packages/`.
 
 ## Structure
 
@@ -31,7 +31,8 @@ mode démo, coquille d'UI) vit dans `packages/`.
 apps/
   film/ manga/ paint/          3 apps Next.js 16, une base Neon chacune
 packages/
-  core/                        demo mode, write-gate owner, apiFetch, utils
+  auth/                        comptes Better Auth, invités, scoping par utilisateur
+  core/                        apiFetch, utils
   ui/                          thème Tailwind, AppShell, BottomNav, dialogs
   tsconfig/                    tsconfig de base
 scripts/
@@ -90,19 +91,19 @@ worker minimal (`public/sw.js`) : réseau d'abord sur les pages avec repli sur
 `/offline`, cache d'abord sur `/_next/static`. Le service worker n'est enregistré
 qu'en production (`packages/ui/src/PwaRegister.tsx`).
 
-## Mode démo
+## Comptes et invités
 
-Chaque app peut tourner en deux exemplaires : le déploiement privé (`DEMO_MODE=false`)
-et un déploiement portfolio public (`DEMO_MODE=true`). En mode démo chaque visiteur
-reçoit un sandbox isolé via un cookie `demo_session` posé par `src/proxy.ts` ; les
-lectures voient le seed partagé (`demoSessionId IS NULL`) plus ses propres lignes, les
-écritures sont estampillées, et un cron Vercel quotidien purge les sandboxes de plus
-de 24 h. Toute la logique est dans `packages/core/src/demo.ts`.
+Un compte (email + mot de passe, ou Google) vaut pour les 3 apps : une seule base
+`auth`, gérée par [Better Auth](https://www.better-auth.com) dans `packages/auth`.
+Chaque collection est privée.
 
-## Write-gate propriétaire
+Pas besoin de compte pour essayer : au premier ajout, le visiteur devient
+**invité**. Sa collection d'essai est liée à un cookie et il ne voit qu'elle. S'il
+crée un compte ou se connecte ensuite, tout ce qu'il a ajouté est rattaché à son
+compte, dans chacune des apps. Un cron quotidien purge les invités inactifs depuis
+30 jours.
 
-En mode privé, si `OWNER_PASSWORD` est défini, les routes API mutantes exigent un
-cookie `owner_session` obtenu sur `/login`. Sans session, les lectures restent
-publiques et les écritures renvoient 401. Stateless : le cookie contient
-`sha256(OWNER_PASSWORD)`, changer le mot de passe invalide toutes les sessions.
-Voir `packages/core/src/owner.ts`.
+Sur `*.vercel.app`, il faut se connecter une fois par app : les navigateurs
+interdisent de partager un cookie entre deux sous-domaines `vercel.app`. Avec un
+domaine perso (`film.kodawari.fr`…), `AUTH_COOKIE_DOMAIN=.kodawari.fr` partage
+la session entre les 3 apps.

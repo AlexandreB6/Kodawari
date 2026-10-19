@@ -9,7 +9,7 @@ Voir le `CLAUDE.md` racine pour les règles communes au monorepo.
 |---|---|
 | `/` | Home — deux onglets, « Explorer » (discover TMDB) et « Films vus ». L'onglet actif est synchronisé avec `?tab=collection`. |
 | `/movie/[slug]` | Détail d'un film. Slug `titre-slug-{tmdbId}` — `slugify()` / `extractIdFromSlug()` de `src/lib/tmdb.ts`. |
-| `/login` | Write-gate propriétaire |
+| `/login` | Connexion / inscription (Better Auth) |
 | `/offline` | Servie par le service worker hors ligne |
 
 ## API

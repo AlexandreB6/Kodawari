@@ -31,10 +31,10 @@ model Manga {
   status         String?  /// "Publishing", "Finished", etc.
   ownedVolumesMap String  @default("[]") /// JSON array des numéros de volumes possédés, ex: "[1,2,3,5]"
   notes          String?  /// Notes perso
-  demoSessionId  String?  /// Sandbox démo : NULL = seed partagé / prod privée
+  userId         String?  /// Propriétaire (compte ou invité, base auth). Rendu obligatoire après rattachement des données existantes
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  @@unique([malId, demoSessionId])
-  @@index([demoSessionId])
+  @@unique([malId, userId])
+  @@index([userId])
 }

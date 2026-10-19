@@ -25,17 +25,15 @@ export interface MangaItem {
   notes: string | null;
   createdAt: string;
   updatedAt: string;
-  demoSessionId: string | null;
 }
 
 interface MangaCardProps {
   manga: MangaItem;
   onRemove: () => void;
-  isShared?: boolean;
 }
 
 /** Carte d'un manga dans la collection — couverture, infos, progression. */
-export function MangaCard({ manga, onRemove, isShared = false }: MangaCardProps) {
+export function MangaCard({ manga, onRemove }: MangaCardProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const statusLabel = manga.status === "Finished" ? "Terminé" : manga.status === "Publishing" ? "En cours" : manga.status;
   const ownedCount = manga.ownedVolumesMap.length;
@@ -78,26 +76,17 @@ export function MangaCard({ manga, onRemove, isShared = false }: MangaCardProps)
             {manga.score.toFixed(1)}
           </span>
         )}
-        {isShared ? (
-          <span
-            className="absolute bottom-2 right-2 rounded-full bg-amber-500/20 backdrop-blur-sm px-2 py-0.5 text-[9px] font-semibold text-amber-200 border border-amber-500/30"
-            title="Ce manga fait partie du catalogue de démonstration et ne peut pas être modifié."
-          >
-            Partagé
-          </span>
-        ) : (
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setConfirmOpen(true);
-            }}
-            aria-label={`Supprimer ${manga.title}`}
-            className="absolute bottom-2 right-2 flex h-7 w-7 items-center justify-center rounded-md bg-black/80 text-white opacity-0 group-hover:opacity-100 hover:bg-destructive/80 hover:text-white transition-all cursor-pointer"
-          >
-            <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-          </button>
-        )}
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setConfirmOpen(true);
+          }}
+          aria-label={`Supprimer ${manga.title}`}
+          className="absolute bottom-2 right-2 flex h-7 w-7 items-center justify-center rounded-md bg-black/80 text-white opacity-0 group-hover:opacity-100 hover:bg-destructive/80 hover:text-white transition-all cursor-pointer"
+        >
+          <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+        </button>
         {/* Barre de progression */}
         {manga.volumes != null && manga.volumes > 0 && (
           <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/40">

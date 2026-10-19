@@ -9,7 +9,7 @@ Voir le `CLAUDE.md` racine pour les règles communes au monorepo.
 |---|---|
 | `/` | Home — liste des gammes avec compteurs de possession |
 | `/peinture/[range]` | Catalogue d'une gamme, filtres type / couleur / métallique / stock |
-| `/login`, `/offline` | Write-gate propriétaire / page hors ligne |
+| `/login`, `/offline` | Connexion / inscription, page hors ligne |
 
 ## API
 
@@ -22,7 +22,7 @@ Voir le `CLAUDE.md` racine pour les règles communes au monorepo.
   `RANGE_MAP` (dans `paint-ranges.ts`) associe un slug de gamme à sa config.
 - `src/components/` — `PeintureClient`, `PaintCard`
 - `prisma/schema.prisma` — modèle `OwnedPaint` uniquement, contrainte unique
-  `(paintId, range, demoSessionId)`
+  `(paintId, range, userId)`
 
 ## Point d'attention
 

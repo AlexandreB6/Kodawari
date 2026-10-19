@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { Paintbrush } from "lucide-react";
 import { AppShell } from "@repo/ui/AppShell";
+import { currentAccount } from "@/lib/scope";
 import type { NavItem } from "@repo/ui/BottomNav";
 import { PAINT_RANGES } from "@/data/paint-ranges";
 
@@ -41,13 +42,15 @@ const NAV_ITEMS: NavItem[] = [
   })),
 ];
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const user = await currentAccount();
   return (
     <html lang="fr" className="dark">
       <body className={`${jakarta.variable} font-sans antialiased min-h-screen bg-background text-foreground`}>
         <AppShell
           appName="Peinture"
           current="paint"
+          user={user}
           icon={<Paintbrush className="w-5 h-5 text-amber-400" aria-hidden="true" />}
           navItems={NAV_ITEMS}
         >

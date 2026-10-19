@@ -8,7 +8,6 @@ import { ScanMangaDialog } from "./ScanMangaDialog";
 import { DEMOGRAPHIC_OPTIONS } from "@/lib/constants";
 import type { JikanManga } from "@/lib/jikan";
 import { apiFetch } from "@repo/core/apiFetch";
-import { isSharedItem } from "@repo/core/clientDemo";
 
 interface Props {
   initialMangas: MangaItem[];
@@ -87,7 +86,6 @@ export function MangaClient({ initialMangas, jikanAvailable }: Props) {
         notes: null,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        demoSessionId: null,
       };
 
       setMangas((prev) => [...prev, newManga]);
@@ -216,7 +214,6 @@ export function MangaClient({ initialMangas, jikanAvailable }: Props) {
             key={manga.malId}
             manga={manga}
             onRemove={() => removeManga(manga.malId)}
-            isShared={isSharedItem(manga)}
           />
         ))}
       </div>

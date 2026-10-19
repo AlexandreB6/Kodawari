@@ -5,11 +5,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Monorepo
 
 Trois applications Next.js **indépendantes** (npm workspaces), une par domaine.
-Elles ne partagent aucune donnée : ni base, ni déploiement, ni navigation.
+Chacune a sa base et son déploiement. Seuls les **comptes** sont communs : une
+base `auth` partagée (voir « Comptes et invités »).
 
 ```
 apps/film       apps/manga     apps/paint
-packages/core   packages/ui    packages/tsconfig
+packages/auth   packages/core  packages/ui    packages/tsconfig
 ```
 
 Chaque app a son `CLAUDE.md` — le lire avant de toucher à son code.
@@ -34,11 +35,21 @@ npx prisma generate
 npx prisma studio
 ```
 
+Le schéma de la base `auth` vit dans `packages/auth/prisma` :
+`npx prisma migrate dev` depuis ce dossier, avec `AUTH_DATABASE_URL` /
+`AUTH_DIRECT_URL` dans l'environnement. Le `build` de chaque app applique
+aussi ses migrations (`npm run db:auth`).
+
+⚠️ Le `build` lance `prisma migrate deploy` sur les URLs de `.env`, donc la
+**prod**. En local, ne lancer un build qu'avec les URLs d'une branche Neon de
+dev dans l'environnement. `.env.development.local`, prioritaire en `next dev`,
+peut pointer vers cette branche.
+
 Pas de lint ni de tests configurés.
 
 ## Règles structurantes
 
-- **Client Prisma par app** : chaque `schema.prisma` déclare
+- **Client Prisma par app** (et pour `packages/auth`) : chaque `schema.prisma` déclare
   `output = "../src/generated/prisma"`, et l'app importe `@/generated/prisma`
   (jamais `@prisma/client`). Le chemin par défaut est hoisté à la racine en
   monorepo : les trois apps s'écraseraient mutuellement.
@@ -47,9 +58,13 @@ Pas de lint ni de tests configurés.
 - **Tailwind v4** : `packages/ui/src/theme.css` porte le thème et son propre
   `@source`. Le `globals.css` d'une app se contente de l'importer et de
   déclarer ses sources.
-- **`export const config` du proxy** doit rester un littéral dans
-  `apps/<app>/src/proxy.ts` : Next l'analyse à la compilation et refuse une
-  valeur importée.
+- **Dépendances de `packages/auth`** : `better-auth` y est installé, pas à la
+  racine. Les apps passent donc par ses exports (`@repo/auth/handler`…) plutôt
+  que d'importer `better-auth` directement.
+- **Casse du chemin sous Windows** : le dépôt est dans `D:Projet`. Si
+  `npm install` est lancé depuis `D:projet`, le lien `node_modules/@repo/*`
+  d'un nouveau package prend la mauvaise casse et Turbopack ne le résout pas
+  (« Module not found »). Il faut le recréer avec `mklink /J`.
 - **Rien de transverse dans `packages/`** : le vocabulaire métier d'un domaine
   (démographies manga, gammes de peinture…) reste dans son app.
 
@@ -57,58 +72,64 @@ Pas de lint ni de tests configurés.
 
 Logique sans UI, importée par les 3 apps :
 
-- `demo.ts` — mode démo : `isDemoMode`, `demoFilter` (scope les reads),
-  `demoWriteData` (estampille les writes), `assertDemoOwnership`, `dedupBySid`
-- `owner.ts` — write-gate propriétaire, dont `ownerGateResponse()` appelé en
-  tête de chaque handler mutant
-- `authRoutes.ts` — `createLoginRoute()` / `createLogoutRoute()`
-- `proxy.ts` — `createDemoProxy()`
-- `apiFetch.ts` — `fetch` + toast d'erreur automatique (mutations côté client)
-- `clientDemo.ts` — `IS_DEMO`, `isSharedItem` (côté client)
+- `apiFetch.ts` — `fetch` pour les mutations côté client : toast d'erreur
+  automatique, et création d'un invité puis nouvel essai sur une 401 `NO_SESSION`
 - `utils.ts` — `cn`, `makeSlug`, `extractIdFromSlug`, helpers d'années
+
+## packages/auth
+
+Comptes, sessions et scoping par utilisateur (Better Auth + Prisma) :
+
+- `server.ts` — instance `auth` : email/mot de passe, Google si
+  `GOOGLE_CLIENT_*`, plugin `anonymous` (invités), rate limit en base,
+  cookie partagé si `AUTH_COOKIE_DOMAIN`
+- `handler.ts` — `GET`/`POST` réexportés par `api/auth/[...all]/route.ts`
+- `scope.ts` — `createUserScope({ app, mergeGuestData })`, instancié dans
+  `apps/<app>/src/lib/scope.ts` : `currentUser`, `currentUserId`,
+  `currentAccount`, `ownerFilter` ; plus `noSessionResponse()`
+- `guests.ts` — `createGuestCleanupRoute()` pour le cron
+- `client.ts` — `authClient` (navigateur)
 
 ## packages/ui
 
 - `theme.css` — tokens du thème (dark only)
-- `AppShell.tsx` — coquille commune : bandeau démo, header, `<main>`,
-  BottomNav, toasts, enregistrement du service worker. **Server component** :
+- `AppShell.tsx` — coquille commune : header (sélecteur d'apps, compte),
+  bandeau d'installation, `<main>`, BottomNav, toasts, enregistrement du
+  service worker. Reçoit `user` (`currentAccount()` du layout). **Server component** :
   les icônes lui sont passées en `ReactNode`, jamais en composant.
 - `AppSwitcher.tsx` — pastilles 🎬 📚 🎨 du header vers les 2 autres apps.
   URLs via `NEXT_PUBLIC_APP_URL_FILM|MANGA|PAINT`, avec repli sur les URLs de prod
 - `InstallPrompt.tsx` — bandeau « Installer l'app » : `beforeinstallprompt` sur
   Chromium, marche à suivre sur iOS, masqué en standalone ou 30 j après fermeture
-- `BottomNav.tsx`, `ConfirmDialog.tsx`, `DemoBanner.tsx`, `LoginForm.tsx`,
-  `PwaRegister.tsx`
+- `AccountMenu.tsx` — Connexion, pastille « Invité », ou avatar + déconnexion
+- `LoginForm.tsx` — connexion / inscription email, bouton Google
+- `BottomNav.tsx`, `ConfirmDialog.tsx`, `PwaRegister.tsx`
 
 ## shadcn/ui v4 — différence critique
 
 - Pas de prop `asChild`. Utiliser `render={<Component />}` pour la composition.
 - Exemple : `<DialogTrigger render={<Button />}>Label</DialogTrigger>`
 
-## Mode démo
+## Comptes et invités
 
-Deux déploiements Vercel possibles par app : privé (`DEMO_MODE=false`) et
-portfolio public (`DEMO_MODE=true`). En démo, `src/proxy.ts` pose un cookie
-`demo_session`, les reads sont scopés à `demoSessionId IS NULL` (seed partagé)
-+ la session du visiteur, les writes sont estampillés, et
-`/api/cron/cleanup-demo` (cron dans `vercel.json`) purge les sandboxes de plus
-de 24 h. `/api/demo/reset` vide la sandbox du visiteur.
+Chaque ligne d'app porte un `userId` : un compte, ou un **invité** (utilisateur
+anonyme Better Auth). Lectures comme écritures passent par le scope de l'app
+(`ownerFilter()`, `currentUserId()`) : chacun ne voit que ses données. Un
+visiteur sans session voit une collection vide.
 
-Les index uniques (`Movie.tmdbId`, `Manga.malId`, `OwnedPaint.(paintId, range)`)
-sont **composites avec `demoSessionId`**, pour que deux visiteurs puissent
-ajouter la même entrée. En mode privé, la couche applicative filtre toujours
-sur `demoSessionId: null`.
-
-Seed de démo : `apps/<app>/prisma/seed.ts`, à lancer avec
-`DATABASE_URL=<url-demo> npx tsx prisma/seed.ts`.
-
-## Write-gate propriétaire
-
-En mode privé, si `OWNER_PASSWORD` est défini, les `POST`/`PUT`/`DELETE` exigent
-un cookie `owner_session` (`sha256(OWNER_PASSWORD)`, httpOnly) obtenu sur
-`/login`. Les lectures restent publiques. Sans sessions en base : changer le mot
-de passe invalide tous les cookies. Ignoré en mode démo et quand la variable est
-absente (dev local).
+- Pas de session à la première visite : la première mutation répond 401
+  `NO_SESSION`, `apiFetch` crée l'invité puis rejoue la requête.
+- À l'inscription ou à la connexion d'un invité, `onLinkAccount` écrit un
+  `UserMerge` dans la base `auth`. Chaque app transfère ses lignes au
+  prochain passage de l'utilisateur, via `mergeGuestData` : en cas de doublon,
+  la ligne du compte l'emporte.
+- `/api/cron/cleanup-guests` (`vercel.json`) applique les rattachements en
+  attente et purge les invités inactifs depuis 30 jours. L'app film supprime
+  ensuite ces invités de la base `auth`, à 35 jours.
+- Index uniques composites avec `userId` : `Movie.(tmdbId)`, `Manga.(malId)`,
+  `OwnedPaint.(paintId, range)`.
+- Sur `*.vercel.app`, une connexion par app : même compte, cookie séparé. Avec
+  un domaine perso, `AUTH_COOKIE_DOMAIN` partage la session.
 
 ## PWA
 
