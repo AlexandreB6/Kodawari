@@ -30,7 +30,7 @@ export interface LoginFormProps {
   initialMode?: Mode;
 }
 
-/** Connexion / inscription, communes aux 3 apps (Better Auth). */
+/** Connexion / inscription, communes aux apps (Better Auth). */
 export function LoginForm({ googleEnabled, isGuest, initialMode = "signin" }: LoginFormProps) {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>(initialMode);

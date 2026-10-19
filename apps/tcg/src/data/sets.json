@@ -1,0 +1,101 @@
+[
+  {
+    "code": "afin",
+    "name": "Final Fantasy Art Series",
+    "type": "memorabilia",
+    "parent": "fin",
+    "releasedAt": "2025-06-13",
+    "icon": "https://svgs.scryfall.io/sets/fin.svg?1792382400",
+    "count": 53
+  },
+  {
+    "code": "fca",
+    "name": "Final Fantasy: Through the Ages",
+    "type": "masterpiece",
+    "parent": "fin",
+    "releasedAt": "2025-06-13",
+    "icon": "https://svgs.scryfall.io/sets/fca.svg?1792382400",
+    "count": 65
+  },
+  {
+    "code": "fic",
+    "name": "Final Fantasy Commander",
+    "type": "commander",
+    "parent": "fin",
+    "releasedAt": "2025-06-13",
+    "icon": "https://svgs.scryfall.io/sets/fic.svg?1792382400",
+    "count": 486
+  },
+  {
+    "code": "fin",
+    "name": "Final Fantasy",
+    "type": "expansion",
+    "parent": null,
+    "releasedAt": "2025-06-13",
+    "icon": "https://svgs.scryfall.io/sets/fin.svg?1792382400",
+    "count": 598
+  },
+  {
+    "code": "pfin",
+    "name": "Final Fantasy Promos",
+    "type": "promo",
+    "parent": "fin",
+    "releasedAt": "2025-06-13",
+    "icon": "https://svgs.scryfall.io/sets/fin.svg?1792382400",
+    "count": 94
+  },
+  {
+    "code": "pss5",
+    "name": "FIN Standard Showdown",
+    "type": "promo",
+    "parent": "fin",
+    "releasedAt": "2025-06-13",
+    "icon": "https://svgs.scryfall.io/sets/star.svg?1792382400",
+    "count": 2
+  },
+  {
+    "code": "rfin",
+    "name": "Final Fantasy Regional Promos",
+    "type": "promo",
+    "parent": "fin",
+    "releasedAt": "2025-06-13",
+    "icon": "https://svgs.scryfall.io/sets/fin.svg?1792382400",
+    "count": 2
+  },
+  {
+    "code": "tfic",
+    "name": "Final Fantasy Commander Tokens",
+    "type": "token",
+    "parent": "fic",
+    "releasedAt": "2025-06-13",
+    "icon": "https://svgs.scryfall.io/sets/fic.svg?1792382400",
+    "count": 11
+  },
+  {
+    "code": "tfin",
+    "name": "Final Fantasy Tokens",
+    "type": "token",
+    "parent": "fin",
+    "releasedAt": "2025-06-13",
+    "icon": "https://svgs.scryfall.io/sets/fin.svg?1792382400",
+    "count": 37
+  },
+  {
+    "code": "wfin",
+    "name": "FIN Asia WPN Promo Tokens",
+    "type": "token",
+    "parent": "fin",
+    "releasedAt": "2025-06-13",
+    "icon": "https://svgs.scryfall.io/sets/fin.svg?1792382400",
+    "count": 3
+  },
+  {
+    "code": "afic",
+    "name": "Final Fantasy Scene Box",
+    "type": "memorabilia",
+    "parent": "fic",
+    "releasedAt": "2025-12-05",
+    "icon": "https://svgs.scryfall.io/sets/fic.svg?1792382400",
+    "count": 24
+  }
+]

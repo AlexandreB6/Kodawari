@@ -1,4 +1,4 @@
-/* ── Thème partagé par les 3 apps (film / manga / paint) ─────────
+/* ── Thème partagé par les apps (film / manga / paint / tcg) ─────────
    Importé depuis chaque apps/<app>/src/app/globals.css :
      @import "@repo/ui/theme.css";
    Le @source ci-dessous garantit que les classes utilisées par les

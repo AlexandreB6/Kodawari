@@ -1,0 +1,4 @@
+@import "@repo/ui/theme.css";
+
+/* Sources de cette app — le thème partagé déclare déjà les siennes. */
+@source "../";

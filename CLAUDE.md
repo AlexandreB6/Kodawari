@@ -4,12 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Monorepo
 
-Trois applications Next.js **indépendantes** (npm workspaces), une par domaine.
+Quatre applications Next.js **indépendantes** (npm workspaces), une par domaine.
 Chacune a sa base et son déploiement. Seuls les **comptes** sont communs : une
 base `auth` partagée (voir « Comptes et invités »).
 
 ```
-apps/film       apps/manga     apps/paint
+apps/film       apps/manga     apps/paint     apps/tcg
 packages/auth   packages/core  packages/ui    packages/tsconfig
 ```
 
@@ -20,9 +20,9 @@ Chaque app a son `CLAUDE.md` — le lire avant de toucher à son code.
 ```bash
 npm install                    # racine uniquement
 
-npm run dev:film               # :3000   (idem :manga :3001, :paint :3002)
-npm run build:all              # build les 3
-npm run typecheck              # tsc --noEmit sur les 3
+npm run dev:film               # :3000   (idem :manga :3001, :paint :3002, :tcg :3003)
+npm run build:all              # build les 4
+npm run typecheck              # tsc --noEmit sur les 4
 
 npm run build -w film          # une seule app
 ```
@@ -52,7 +52,7 @@ Pas de lint ni de tests configurés.
 - **Client Prisma par app** (et pour `packages/auth`) : chaque `schema.prisma` déclare
   `output = "../src/generated/prisma"`, et l'app importe `@/generated/prisma`
   (jamais `@prisma/client`). Le chemin par défaut est hoisté à la racine en
-  monorepo : les trois apps s'écraseraient mutuellement.
+  monorepo : les apps s'écraseraient mutuellement.
 - **Packages en TS brut** : toute app qui consomme `@repo/*` doit les lister
   dans `transpilePackages` (`next.config.ts`).
 - **Tailwind v4** : `packages/ui/src/theme.css` porte le thème et son propre
@@ -70,7 +70,7 @@ Pas de lint ni de tests configurés.
 
 ## packages/core
 
-Logique sans UI, importée par les 3 apps :
+Logique sans UI, importée par les apps :
 
 - `apiFetch.ts` — `fetch` pour les mutations côté client : toast d'erreur
   automatique, et création d'un invité puis nouvel essai sur une 401 `NO_SESSION`
@@ -97,8 +97,8 @@ Comptes, sessions et scoping par utilisateur (Better Auth + Prisma) :
   bandeau d'installation, `<main>`, BottomNav, toasts, enregistrement du
   service worker. Reçoit `user` (`currentAccount()` du layout). **Server component** :
   les icônes lui sont passées en `ReactNode`, jamais en composant.
-- `AppSwitcher.tsx` — pastilles 🎬 📚 🎨 du header vers les 2 autres apps.
-  URLs via `NEXT_PUBLIC_APP_URL_FILM|MANGA|PAINT`, avec repli sur les URLs de prod
+- `AppSwitcher.tsx` — pastilles 🎬 📚 🎨 🃏 du header vers les autres apps.
+  URLs via `NEXT_PUBLIC_APP_URL_FILM|MANGA|PAINT|TCG`, avec repli sur les URLs de prod
 - `InstallPrompt.tsx` — bandeau « Installer l'app » : `beforeinstallprompt` sur
   Chromium, marche à suivre sur iOS, masqué en standalone ou 30 j après fermeture
 - `AccountMenu.tsx` — Connexion, pastille « Invité », ou avatar + déconnexion
@@ -127,7 +127,7 @@ visiteur sans session voit une collection vide.
   attente et purge les invités inactifs depuis 30 jours. L'app film supprime
   ensuite ces invités de la base `auth`, à 35 jours.
 - Index uniques composites avec `userId` : `Movie.(tmdbId)`, `Manga.(malId)`,
-  `OwnedPaint.(paintId, range)`.
+  `OwnedPaint.(paintId, range)`, `OwnedCard.(scryfallId, finish, lang)`.
 - Sur `*.vercel.app`, une connexion par app : même compte, cookie séparé. Avec
   un domaine perso, `AUTH_COOKIE_DOMAIN` partage la session.
 

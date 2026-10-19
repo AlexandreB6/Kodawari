@@ -1,0 +1,32 @@
+// Schéma Prisma de l'app TCG.
+// Une base dédiée (`tcg`) dans le projet Neon.
+// Le catalogue des cartes reste statique (src/data, généré depuis Scryfall),
+// la base ne stocke que la possession.
+
+generator client {
+  provider = "prisma-client-js"
+  // Sortie dédiée : en monorepo, le client par défaut (node_modules/.prisma)
+  // est hoisté à la racine et les apps s'écraseraient mutuellement.
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+/// Exemplaires possédés d'une impression, pour une finition et une langue
+model OwnedCard {
+  id         Int      @id @default(autoincrement())
+  scryfallId String   /// Identifiant Scryfall de l'impression (src/data/cards.json)
+  finish     String   @default("nonfoil") /// "nonfoil" | "foil" | "etched"
+  lang       String   @default("en") /// Langue d'impression ("en", "fr", "ja"…)
+  quantity   Int      @default(1)
+  userId     String   /// Propriétaire (compte ou invité, base auth)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([scryfallId, finish, lang, userId])
+  @@index([userId])
+}

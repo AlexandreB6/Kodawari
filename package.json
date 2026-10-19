@@ -11,10 +11,12 @@
     "dev:film": "npm run dev -w film",
     "dev:manga": "npm run dev -w manga",
     "dev:paint": "npm run dev -w paint",
+    "dev:tcg": "npm run dev -w tcg",
     "build:film": "npm run build -w film",
     "build:manga": "npm run build -w manga",
     "build:paint": "npm run build -w paint",
-    "build:all": "npm run build -w film && npm run build -w manga && npm run build -w paint",
+    "build:tcg": "npm run build -w tcg",
+    "build:all": "npm run build -w film && npm run build -w manga && npm run build -w paint && npm run build -w tcg",
     "typecheck": "npm run typecheck --workspaces --if-present"
   },
   "devDependencies": {

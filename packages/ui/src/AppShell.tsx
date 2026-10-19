@@ -22,7 +22,7 @@ export interface AppShellProps {
 }
 
 /**
- * Coquille commune aux 3 apps : header sticky (sélecteur d'apps, compte),
+ * Coquille commune aux apps : header sticky (sélecteur d'apps, compte),
  * bandeau d'installation, conteneur principal, barre d'onglets mobile, toasts
  * et enregistrement du service worker.
  */

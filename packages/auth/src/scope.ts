@@ -18,7 +18,7 @@ import { NextResponse } from "next/server";
 import { auth, type SessionUser } from "./server";
 import { authDb } from "./prisma";
 
-export type AppId = "film" | "manga" | "paint";
+export type AppId = "film" | "manga" | "paint" | "tcg";
 
 /** Ne correspond à aucune ligne : un visiteur sans session voit une liste vide. */
 const NO_USER = "__no-user__";

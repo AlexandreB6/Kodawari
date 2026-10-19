@@ -8,7 +8,7 @@ Kodawari rassemble mes carnets de passionné : un endroit à moi pour noter, sui
 et retrouver ce que je collectionne. Chaque passion a son app, pensée pour son
 usage, et de nouvelles pourront s'ajouter au fil des envies.
 
-Monorepo de trois applications indépendantes. Chacune est une **PWA installable**
+Monorepo de quatre applications indépendantes. Chacune est une **PWA installable**
 sur téléphone, déployée séparément.
 
 | App | Dossier | Contenu | En ligne | Port dev |
@@ -16,27 +16,28 @@ sur téléphone, déployée séparément.
 | 🎬 **Cinéma** | [`apps/film`](apps/film) | Films vus, notes 0.5–5 ★, découverte du catalogue TMDB | [kodawari-film](https://kodawari-film.vercel.app) | 3000 |
 | 📚 **Manga** | [`apps/manga`](apps/manga) | Collection MyAnimeList, suivi des volumes, scan ISBN | [kodawari-manga](https://kodawari-manga.vercel.app) | 3001 |
 | 🎨 **Peinture** | [`apps/paint`](apps/paint) | Inventaire multi-gammes (Citadel, Monument Hobbies) | [kodawari-paint](https://kodawari-paint.vercel.app) | 3002 |
+| 🃏 **TCG** | [`apps/tcg`](apps/tcg) | Collection MTG × Final Fantasy : foil, langue, quantités (catalogue Scryfall) | [kodawari-tcg](https://kodawari-tcg.vercel.app) | 3003 |
 
-## Pourquoi trois apps
+## Pourquoi des apps séparées
 
 Le projet était à l'origine une seule application avec trois espaces et un dashboard
-commun. Les trois domaines n'ont aucune donnée métier en commun : les séparer donne trois
-icônes distinctes sur l'écran d'accueil du téléphone, trois cycles de déploiement et
-trois bases indépendantes. Seuls les comptes sont partagés, dans une base `auth`.
+commun. Les domaines n'ont aucune donnée métier en commun : les séparer donne
+une icône par app sur l'écran d'accueil du téléphone, un cycle de déploiement et
+une base par app. Seuls les comptes sont partagés, dans une base `auth`.
 Le code réellement transverse (comptes, thème, coquille d'UI) vit dans `packages/`.
 
 ## Structure
 
 ```
 apps/
-  film/ manga/ paint/          3 apps Next.js 16, une base Neon chacune
+  film/ manga/ paint/ tcg/     4 apps Next.js 16, une base Neon chacune
 packages/
   auth/                        comptes Better Auth, invités, scoping par utilisateur
   core/                        apiFetch, utils
   ui/                          thème Tailwind, AppShell, BottomNav, dialogs
   tsconfig/                    tsconfig de base
 scripts/
-  generate-icons.mjs           icônes PWA des 3 apps
+  generate-icons.mjs           icônes PWA des apps
 ```
 
 Les packages sont consommés en TypeScript brut : chaque app les déclare dans
@@ -50,9 +51,10 @@ npm install                    # une seule fois, à la racine
 npm run dev:film               # http://localhost:3000
 npm run dev:manga              # http://localhost:3001
 npm run dev:paint              # http://localhost:3002
+npm run dev:tcg                # http://localhost:3003
 
-npm run build:all              # build les 3
-npm run typecheck              # tsc --noEmit sur les 3
+npm run build:all              # build les 4
+npm run typecheck              # tsc --noEmit sur les 4
 ```
 
 Chaque app a son propre `.env.local` — partir de son `.env.local.example`.
@@ -93,7 +95,7 @@ qu'en production (`packages/ui/src/PwaRegister.tsx`).
 
 ## Comptes et invités
 
-Un compte (email + mot de passe, ou Google) vaut pour les 3 apps : une seule base
+Un compte (email + mot de passe, ou Google) vaut pour toutes les apps : une seule base
 `auth`, gérée par [Better Auth](https://www.better-auth.com) dans `packages/auth`.
 Chaque collection est privée.
 
@@ -106,4 +108,4 @@ compte, dans chacune des apps. Un cron quotidien purge les invités inactifs dep
 Sur `*.vercel.app`, il faut se connecter une fois par app : les navigateurs
 interdisent de partager un cookie entre deux sous-domaines `vercel.app`. Avec un
 domaine perso (`film.kodawari.fr`…), `AUTH_COOKIE_DOMAIN=.kodawari.fr` partage
-la session entre les 3 apps.
+la session entre les apps.

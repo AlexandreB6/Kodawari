@@ -1,5 +1,5 @@
 /**
- * Instance Better Auth partagée par les 3 apps.
+ * Instance Better Auth partagée par les apps.
  *
  * Chaque app la monte sur `src/app/api/auth/[...all]/route.ts` et pointe sur
  * la même base `auth` : un compte vaut pour toutes les apps.
@@ -18,12 +18,13 @@ import { authDb } from "./prisma";
 
 const cookieDomain = process.env.AUTH_COOKIE_DOMAIN;
 
-/** Origines des 3 apps, autorisées à appeler l'API d'auth (CSRF). */
+/** Origines des apps, autorisées à appeler l'API d'auth (CSRF). */
 const trustedOrigins = [
   process.env.BETTER_AUTH_URL,
   process.env.NEXT_PUBLIC_APP_URL_FILM,
   process.env.NEXT_PUBLIC_APP_URL_MANGA,
   process.env.NEXT_PUBLIC_APP_URL_PAINT,
+  process.env.NEXT_PUBLIC_APP_URL_TCG,
 ].filter((o): o is string => !!o);
 
 /** Google n'est proposé que si ses identifiants OAuth sont configurés. */
