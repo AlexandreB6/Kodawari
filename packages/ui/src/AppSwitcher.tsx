@@ -1,9 +1,9 @@
-import { BookOpen, Film, Paintbrush } from "lucide-react";
+import { BookOpen, Film, Layers, Paintbrush } from "lucide-react";
 
-export type AppId = "film" | "manga" | "paint";
+export type AppId = "film" | "manga" | "paint" | "tcg";
 
 /**
- * Les 3 apps de la suite. Les URLs viennent des variables publiques
+ * Les apps de la suite. Les URLs viennent des variables publiques
  * `NEXT_PUBLIC_APP_URL_*` (localhost en dev, domaine perso plus tard) ; à
  * défaut, celles de production. Chaque `process.env.NEXT_PUBLIC_*` doit rester
  * écrit en toutes lettres pour que Next l'inline au build.
@@ -32,6 +32,14 @@ const APPS: { id: AppId; label: string; href: string; icon: typeof Film; color: 
     icon: Paintbrush,
     color: "text-amber-400",
     hover: "group-hover:text-amber-400",
+  },
+  {
+    id: "tcg",
+    label: "TCG",
+    href: process.env.NEXT_PUBLIC_APP_URL_TCG || "https://kodawari-tcg.vercel.app",
+    icon: Layers,
+    color: "text-rose-400",
+    hover: "group-hover:text-rose-400",
   },
 ];
 

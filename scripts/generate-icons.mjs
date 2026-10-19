@@ -1,7 +1,7 @@
 /**
- * Génère les icônes PWA des 3 apps à partir d'un SVG décrit ici.
+ * Génère les icônes PWA des apps à partir d'un SVG décrit ici.
  *
- *   node scripts/generate-icons.mjs [film|manga|paint]
+ *   node scripts/generate-icons.mjs [film|manga|paint|tcg]
  *
  * Sort dans apps/<app>/public/ : icon-192, icon-512, icon-maskable-512
  * (glyphe rétréci pour la zone de sécurité Android) et apple-touch-icon.
@@ -48,6 +48,14 @@ const GLYPHS = {
       <circle cx="38" cy="38" r="6" fill="C"/>
       <circle cx="62" cy="42" r="6" fill="C"/>
       <circle cx="44" cy="62" r="6" fill="C"/>`,
+  },
+  tcg: {
+    color: "#fb7185",
+    // Deux cartes en éventail, la seconde marquée d'un symbole
+    body: `
+      <rect x="18" y="22" width="40" height="56" rx="5" fill="none" stroke="C" stroke-width="6" transform="rotate(-12 38 50)"/>
+      <rect x="42" y="22" width="40" height="56" rx="5" fill="${BG}" stroke="C" stroke-width="6" transform="rotate(10 62 50)"/>
+      <circle cx="62" cy="50" r="7" fill="C"/>`,
   },
 };
 
